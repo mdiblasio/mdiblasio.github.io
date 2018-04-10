@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="manifest" href="manifest.json" />
+    <title>Page 1</title>
+    <style>
+    body {
+        font-size: 20px;
+    }
+
+    a {
+        display: block;
+        margin: 10px;
+    }
+    </style>
+</head>
+
+<body>
+    <h1>Page 1</h1>
+    <a href="index.html">Home</a>
+    <a href="page1.html">Page 1</a>
+    <a href="page2.html">Page 2</a>
+    <a href="page3.html">Page 3</a>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js');
+        });
+    }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="manifest" href="manifest.json" />
+    <script src="idb.js"></script>
+    <title>Home</title>
+    <style>
+    body {
+        font-size: 20px;
+    }
+
+    a {
+        display: block;
+        margin: 10px;
+    }
+
+    #startURL {
+        display: inline;
+    }
+
+    button {
+        display: block;
+        font-size: 20px;
+        margin: 15px;
+        width: 225px;
+    }
+    </style>
+</head>
+
+<body>
+    <h1>Home</h1>
+    <a href="index.html">Home</a>
+    <a href="page1.html">Page 1</a>
+    <a href="page2.html">Page 2</a>
+    <a href="page3.html">Page 3</a>
+    <br/>
+    <br/>
+    <b>Current start URL:</b>
+    <a id="startURL"></a>
+    <br/>
+    <br/>
+    <b>Set start URL:</b>
+    <button onclick="setStartURL('index.html');">Home</button>
+    <button onclick="setStartURL('page1.html');">Page 1</button>
+    <button onclick="setStartURL('page2.html');">Page 2</button>
+    <button onclick="setStartURL('page3.html');">Page 3</button>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js');
+        });
+    }
+    </script>
+    <script>
+    var dbPromise = idb.open('DynamicManifest', 1, (function(upgradeDb) {
+        if (!upgradeDb.objectStoreNames.contains('UserSettings')) {
+            var queuedRequests = upgradeDb.createObjectStore('UserSettings', {
+                keyPath: 'setting',
+            });
+        }
+    }));
+
+    function getStartURL() {
+        return dbPromise.then(function(db) {
+            var tx = db.transaction('UserSettings', 'readonly');
+            var store = tx.objectStore('UserSettings');
+            return store.get('start_url');
+        }).then(val => {
+            if (!val)
+                return 'index.html';
+            return val.value;
+        });
+    }
+
+    function updateStartURL() {
+        getStartURL().then(val => {
+            let startUrlLink = document.getElementById('startURL');
+            startUrlLink.innerText = val;
+            startUrlLink.href = val;
+        });
+    }
+
+    function setStartURL(startURL) {
+        dbPromise.then(function(db) {
+            var tx = db.transaction('UserSettings', 'readwrite');
+            var store = tx.objectStore('UserSettings');
+            store.put({ setting: 'start_url', value: startURL });
+            return tx.complete;
+        }).then(updateStartURL());
+    }
+    updateStartURL();
+    </script>
+</body>
+
+</html>
