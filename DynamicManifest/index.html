@@ -12,11 +12,6 @@
         font-size: 20px;
     }
 
-    a {
-        display: block;
-        margin: 10px;
-    }
-
     #startURL {
         display: inline;
     }
@@ -27,15 +22,29 @@
         margin: 15px;
         width: 225px;
     }
+
+    #headerNav {
+        display: flex;
+        flex-flow: row nowrap;
+        width: 100%;
+        margin: 20px;
+        max-width: 500px;
+    }
+
+    #headerNav>* {
+        flex: 1;
+    }
     </style>
 </head>
 
 <body>
     <h1>Home</h1>
-    <a href="index.html">Home</a>
-    <a href="page1.html">Page 1</a>
-    <a href="page2.html">Page 2</a>
-    <a href="page3.html">Page 3</a>
+    <div id="headerNav">
+        <a href="index.html">Home</a>
+        <a href="page1.html">Page 1</a>
+        <a href="page2.html">Page 2</a>
+        <a href="page3.html">Page 3</a>
+    </div>
     <br/>
     <br/>
     <b>Current start URL:</b>
