@@ -12,7 +12,7 @@
 
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'UA-114121901-1', { 'page_title': 'AMP Demos v3' });
+    gtag('config', 'UA-114121901-1', { 'page_title': 'AMP Demos v4' });
     </script>
     <style>
     body {
@@ -138,7 +138,8 @@
             <input type="url" required class="entry textEntry" id="canonicalURL" name="canonicalURL" placeholder="https://ideas.mercadolibre.com/ar/"> </div>
         <div class="row">
             <label class="label" for="searchTerm">Google Search Term</label>
-            <input type="text" id="searchTerm" class="entry textEntry" name="searchTerm" required placeholder="ideas mercado libre argentina site:mercadolibre.com" pattern="^(?:[\w:.\s])*$"> </div>
+            <input type="text" id="searchTerm" class="entry textEntry" name="searchTerm" required placeholder="ideas mercado libre argentina site:mercadolibre.com"> </div>
+        <!--  pattern="^(?:[\w:.\s])*$ -->
         <div class="row">
             <label class="label">Connection Type</label>
             <div class="entry">
@@ -253,13 +254,29 @@
         });
     }
 
-    function runScriptedWPT(searchTerm, connection, _test) {
+    function runScriptedWPT(searchTerm, ampUrl, connection, _test) {
         let connectionType;
         if (connection === "2G") connectionType = "2G";
         else if (connection === "3G") connectionType = "3GFast";
         else if (connection === "4G") connectionType = "4G";
         // TODO: physical device = Dulles_MotoG4%3AMoto%20G4%20-%20Chrome%20Beta.
-        return fetch(`https://www.webpagetest.org/runtest.php?k=bb38fe0ba4c5458abf62f7f294398a85&f=json&runs=3&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connectionType}&script=logData%200%0D%0Anavigate%20https%3A%2F%2Fwww.google.com%2Fsearch%3Fq%3D${searchTerm}%0D%0Asleep%203%0D%0Aexec%20window.scrollBy%280%2C%20600%29%3B%0D%0Asleep%201%0D%0Aexec%20window.scrollBy%280%2C%20600%29%3B%0D%0Asleep%201%0D%0Aexec%20window.scrollBy%280%2C%20600%29%3B%0D%0Asleep%201%0D%0Aexec%20window.scrollBy%280%2C%20600%29%3B%0D%0Asleep%201%0D%0Aexec%20window.scrollBy%280%2C%20600%29%3B%0D%0Asleep%201%0D%0Aexec%20window.scrollBy%280%2C%20600%29%3B%0D%0Asleep%205%0D%0AlogData%201%0D%0AexecAndWait%20document.querySelector%28%27.amp_r%27%29.click%28%29%3B`, {
+        let script =
+            `logData    0
+navigate    https://www.google.com/search?q=${encodeURIComponent(searchTerm)}
+sleep   3
+exec    window.scrollBy(0, 600);
+sleep   1
+exec    window.scrollBy(0, 600);
+sleep   1
+exec    window.scrollBy(0, 600);
+sleep   1
+exec    window.scrollBy(0, 600);
+sleep   1
+exec    window.scrollBy(0, 600);
+sleep   5
+logData 1
+execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
+        return fetch(`https://www.webpagetest.org/runtest.php?k=bb38fe0ba4c5458abf62f7f294398a85&f=json&runs=3&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connectionType}&script=${encodeURIComponent(script)}`, {
             'method': 'GET',
         }).then(response => response.text()).then(json => {
             return {
@@ -272,104 +289,90 @@
     var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
     var API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
     var searchTermElm = document.getElementById('searchTerm');
-    searchTermElm.addEventListener("input", function(event) {
-        if (searchTermElm.validity.patternMismatch) {
-            searchTermElm.setCustomValidity(`No special characters except for '.' or ':'`);
-        } else {
-            searchTermElm.setCustomValidity("");
-        }
-    });
     var form = document.getElementById('inputUrls');
     form.addEventListener('submit', (e) => {
         console.log('submit');
         e.preventDefault();
-        if (form.checkValidity() === false) {
-            document.getElementById('searchTerm').setCustomValidity(`No special characters except for '.' or ':'`);
-            evt.preventDefault();
-            alert("Form is invalid - submission prevented!");
-            return false;
-        } else {
-            var formData = new FormData(document.getElementById('inputUrls'));
-            fetch(`${AMP_BATCH_URL}?key=${API_KEY}`, {
-                'body': `{"urls":["${formData.get('canonicalURL')}"]}`,
-                method: 'POST',
-                headers: new Headers([
-                    ['Content-Type', 'application/json']
-                ]),
-            }).then(response => response.json()).then(json => {
-                document.getElementById('output').style.visibility = 'visible';
-                let originalUrl = json.ampUrls[0].originalUrl;
-                let ampUrl = json.ampUrls[0].ampUrl;
-                let cdnAmpUrl = json.ampUrls[0].cdnAmpUrl;
-                let searchTerm = formData.get('searchTerm').replace(/ /g, '%2B').replace(/\:/g, '%3A');
-                let connection = formData.get('connectionType');
-                var promises = [];
-                var checks = document.querySelectorAll('.checkbox');
-                let Canonical = false,
-                    AMPOrigin = false,
-                    AMPCache = false,
-                    SERP = false;
-                checks.forEach(check => {
-                    if (check.checked) {
-                        switch (check.value) {
-                            case "Canonical":
-                                promises.push(runWPT(originalUrl, connection, check.value));
-                                Canonical = true;
-                                break;
-                            case "AMP Origin":
-                                promises.push(runWPT(ampUrl, connection, check.value));
-                                AMPOrigin = true;
-                                break;
-                            case "AMP Cache":
-                                promises.push(runWPT(cdnAmpUrl, connection, check.value));
-                                AMPCache = true;
-                                break;
-                            case "SERP":
-                                promises.push(runScriptedWPT(searchTerm, connection, check.value));
-                                SERP = true;
-                                break;
-                        }
+        var formData = new FormData(document.getElementById('inputUrls'));
+        fetch(`${AMP_BATCH_URL}?key=${API_KEY}`, {
+            'body': `{"urls":["${formData.get('canonicalURL')}"]}`,
+            method: 'POST',
+            headers: new Headers([
+                ['Content-Type', 'application/json']
+            ]),
+        }).then(response => response.json()).then(json => {
+            document.getElementById('output').style.visibility = 'visible';
+            let originalUrl = json.ampUrls[0].originalUrl;
+            let ampUrl = json.ampUrls[0].ampUrl;
+            let cdnAmpUrl = json.ampUrls[0].cdnAmpUrl;
+            let searchTerm = formData.get('searchTerm'); //.replace(/ /g, '%2B').replace(/\:/g, '%3A');
+            let connection = formData.get('connectionType');
+            var promises = [];
+            var checks = document.querySelectorAll('.checkbox');
+            let Canonical = false,
+                AMPOrigin = false,
+                AMPCache = false,
+                SERP = false;
+            checks.forEach(check => {
+                if (check.checked) {
+                    switch (check.value) {
+                        case "Canonical":
+                            promises.push(runWPT(originalUrl, connection, check.value));
+                            Canonical = true;
+                            break;
+                        case "AMP Origin":
+                            promises.push(runWPT(ampUrl, connection, check.value));
+                            AMPOrigin = true;
+                            break;
+                        case "AMP Cache":
+                            promises.push(runWPT(cdnAmpUrl, connection, check.value));
+                            AMPCache = true;
+                            break;
+                        case "SERP":
+                            promises.push(runScriptedWPT(searchTerm, ampUrl, connection, check.value));
+                            SERP = true;
+                            break;
+                    }
+                }
+            });
+            let first = true;
+            Promise.all(promises).then(values => {
+                window.values = values;
+                let compareVideosURL = `https://www.webpagetest.org/video/compare.php?tests=`;
+                values.forEach(val => {
+                    if (!first) {
+                        compareVideosURL += `,`;
+                    }
+                    first = false;
+                    compareVideosURL += `${val.id}-l:${val.test}-c:0`;
+                    switch (val.test) {
+                        case "Canonical":
+                            document.getElementById('originalWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
+                            break;
+                        case "AMP Origin":
+                            document.getElementById('ampOriginWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
+                            break;
+                        case "AMP Cache":
+                            document.getElementById('ampCacheWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
+                            break;
+                        case "SERP":
+                            document.getElementById('ampSERPWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
+                            break;
                     }
                 });
-                let first = true;
-                Promise.all(promises).then(values => {
-                    window.values = values;
-                    let compareVideosURL = `https://www.webpagetest.org/video/compare.php?tests=`;
-                    values.forEach(val => {
-                        if (!first) {
-                            compareVideosURL += `,`;
-                        }
-                        first = false;
-                        compareVideosURL += `${val.id}-l:${val.test}-c:0`;
-                        switch (val.test) {
-                            case "Canonical":
-                                document.getElementById('originalWPT').innerHTML = `<a href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                                break;
-                            case "AMP Origin":
-                                document.getElementById('ampOriginWPT').innerHTML = `<a href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                                break;
-                            case "AMP Cache":
-                                document.getElementById('ampCacheWPT').innerHTML = `<a href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                                break;
-                            case "SERP":
-                                document.getElementById('ampSERPWPT').innerHTML = `<a href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                                break;
-                        }
-                    });
-                    compareVideosURL += `&ival=1000`;
-                    document.getElementById('comparisonLink').href = compareVideosURL;
-                    document.getElementById('wptiframe').src = compareVideosURL;
-                    saveTest(originalUrl, compareVideosURL);
-                    gtag('event', 'Run Test', {
-                        'event_category': `${connection}`,
-                        'event_label': `url=${originalUrl}&searchTerm=${searchTerm}&link=${compareVideosURL}`
-                    });
+                compareVideosURL += `&ival=1000`;
+                document.getElementById('comparisonLink').href = compareVideosURL;
+                document.getElementById('wptiframe').src = compareVideosURL;
+                saveTest(originalUrl, compareVideosURL);
+                gtag('event', 'Run Test', {
+                    'event_category': `${connection}`,
+                    'event_label': `url=${originalUrl}&searchTerm=${searchTerm}&link=${compareVideosURL}`
                 });
-                document.getElementById('originalUrl').innerHTML = `<code><a href='${originalUrl}'>${originalUrl}</a></code>`;
-                document.getElementById('ampUrl').innerHTML = `<code><a href='${ampUrl}'>${ampUrl}</a></code>`;
-                document.getElementById('cdnAmpUrl').innerHTML = `<code><a href='${cdnAmpUrl}'>${cdnAmpUrl}</a></code>`;
             });
-        }
+            document.getElementById('originalUrl').innerHTML = `<code><a href='${originalUrl}'>${originalUrl}</a></code>`;
+            document.getElementById('ampUrl').innerHTML = `<code><a href='${ampUrl}'>${ampUrl}</a></code>`;
+            document.getElementById('cdnAmpUrl').innerHTML = `<code><a href='${cdnAmpUrl}'>${cdnAmpUrl}</a></code>`;
+        });
     });
     </script>
 </body>
