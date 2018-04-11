@@ -1,7 +1,7 @@
 {
     "name": "DynamicSW",
     "short_name": "DynamicSW",
-    "start_url": "start",
+    "start_url": "index.html?homescreen=1",
     "background_color": "#ffffff",
     "theme_color": "#5ec5cd",
     "display": "standalone",
