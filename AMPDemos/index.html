@@ -359,7 +359,7 @@
                     saveTest(originalUrl, compareVideosURL);
                     gtag('event', 'Run Test', {
                         'event_category': `${connection}`,
-                        'event_label': `url=${originalUrl}&searchTerm=${searchTerm}`
+                        'event_label': `url=${originalUrl}&searchTerm=${searchTerm}&link=${compareVideosURL}`
                     });
                 });
                 document.getElementById('originalUrl').innerHTML = `<code><a href='${originalUrl}'>${originalUrl}</a></code>`;
