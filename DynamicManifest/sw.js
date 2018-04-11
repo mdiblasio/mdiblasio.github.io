@@ -4,13 +4,7 @@ importScripts('idb.js');
 workbox.skipWaiting();
 workbox.clientsClaim();
 
-var dbPromise = idb.open('DynamicManifest', 1, (function(upgradeDb) {
-    if (!upgradeDb.objectStoreNames.contains('UserSettings')) {
-        var queuedRequests = upgradeDb.createObjectStore('UserSettings', {
-            keyPath: 'setting',
-        });
-    }
-}));
+var dbPromise = idb.open('DynamicManifest');
 
 function getStartURL() {
     return dbPromise.then(function(db) {

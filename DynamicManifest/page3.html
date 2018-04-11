@@ -5,46 +5,40 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <link rel="manifest" href="manifest.json" />
+    <script src="idb.js"></script>
     <title>Page 3</title>
     <style>
     body {
         font-size: 20px;
-    }
-
-    a {
-        display: block;
-        margin: 10px;
-    }
-
-    #headerNav {
-        display: flex;
-        flex-flow: row nowrap;
-        width: 100%;
         margin: 20px;
-        max-width: 500px;
     }
 
-    #headerNav>* {
-        flex: 1;
+    h1 {
+        margin: 10px 0px;
+    }
+
+    nav>a {
+        margin-right: 10px;
+    }
+
+    div {
+        margin: 20px 0px;
     }
     </style>
 </head>
-
-<body>
+<header>
     <h1>Page 3</h1>
-    <div id="headerNav">
+    <nav id="nav">
         <a href="index.html">Home</a>
         <a href="page1.html">Page 1</a>
         <a href="page2.html">Page 2</a>
-        <a href="page3.html">Page 3</a>
-    </div>
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js');
-        });
-    }
-    </script>
+        <a href="page3.html" active>Page 3</a>
+    </nav>
+</header>
+<hr/>
+
+<body>
+
 </body>
 
 </html>

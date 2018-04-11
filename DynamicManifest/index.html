@@ -10,58 +10,66 @@
     <style>
     body {
         font-size: 20px;
-    }
-
-    #startURL {
-        display: inline;
+        margin: 20px;
     }
 
     button {
         display: block;
-        font-size: 20px;
-        margin: 15px;
-        width: 225px;
+        font-size: 14px;
+        margin: 10px;
+        width: 100px;
+        padding: 5px 0px;
     }
 
-    #headerNav {
-        display: flex;
-        flex-flow: row nowrap;
-        width: 100%;
-        margin: 20px;
-        max-width: 500px;
+    h1 {
+        margin: 10px 0px;
     }
 
-    #headerNav>* {
-        flex: 1;
+    nav>a {
+        margin-right: 10px;
+    }
+
+    div {
+        margin: 20px 0px;
+    }
+
+    #startURL {
+        margin-left: 10px;
     }
     </style>
 </head>
-
-<body>
+<header>
     <h1>Home</h1>
-    <div id="headerNav">
-        <a href="index.html">Home</a>
+    <nav id="nav">
+        <a href="index.html" active>Home</a>
         <a href="page1.html">Page 1</a>
         <a href="page2.html">Page 2</a>
         <a href="page3.html">Page 3</a>
-    </div>
-    <br/>
-    <br/>
-    <b>Current start URL:</b>
-    <a id="startURL"></a>
-    <br/>
-    <br/>
-    <b>Set start URL:</b>
-    <button onclick="setStartURL('index.html');">Home</button>
-    <button onclick="setStartURL('page1.html');">Page 1</button>
-    <button onclick="setStartURL('page2.html');">Page 2</button>
-    <button onclick="setStartURL('page3.html');">Page 3</button>
+    </nav>
+</header>
+<hr/>
 
+<body>
+    <div>
+        <b>Current Start URL: </b>
+        <a id="startURL"></a>
+    </div>
+    <div>
+        <b>Change Start URL:</b>
+        <button onclick="setStartURL('index.html');">Home</button>
+        <button onclick="setStartURL('page1.html');">Page 1</button>
+        <button onclick="setStartURL('page2.html');">Page 2</button>
+        <button onclick="setStartURL('page3.html');">Page 3</button>
+    </div>
     <script>
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js');
-        });
+        navigator.serviceWorker.register('/DynamicManifest/sw.js')
+            .then(function(registration) {
+                console.log('Registration successful, scope is:', registration.scope);
+            })
+            .catch(function(error) {
+                console.log('Service worker registration failed, error:', error);
+            });
     }
     </script>
     <script>
@@ -97,7 +105,10 @@
         dbPromise.then(function(db) {
             var tx = db.transaction('UserSettings', 'readwrite');
             var store = tx.objectStore('UserSettings');
-            store.put({ setting: 'start_url', value: startURL });
+            store.put({
+                setting: 'start_url',
+                value: startURL
+            });
             return tx.complete;
         }).then(updateStartURL());
     }
