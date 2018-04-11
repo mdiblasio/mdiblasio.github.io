@@ -1,9 +1,7 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.0.0/workbox-sw.js');
 importScripts('idb.js');
-
 workbox.skipWaiting();
 workbox.clientsClaim();
-
 var dbPromise = idb.open('DynamicManifest');
 
 function getStartURL() {
@@ -17,14 +15,13 @@ function getStartURL() {
         return val.value;
     });
 }
-
 const handler = ({ url, event }) => {
+    console.log("responding");
     return getStartURL().then(page => {
-    	return fetch(page)
+        return fetch(page)
     });
 };
-
 workbox.routing.registerRoute(
-    /start/,
+    /index\.html\?homescreen=1/,
     handler
 );
