@@ -11,7 +11,7 @@ function getStartURL() {
         return store.get('start_url');
     }).then(val => {
         if (!val)
-            return 'home.html';
+            return 'index.html';
         return val.value;
     });
 }
