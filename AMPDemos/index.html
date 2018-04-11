@@ -271,10 +271,13 @@
     getTests();
     var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
     var API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
-    document.getElementById('searchTerm').addEventListener('invalid', function() {
-        console.log('invalid');
-        e.preventDefault();
-        this.setCustomValidity(`No special characters except for '.' or ':'`);
+    var searchTermElm = document.getElementById('searchTerm');
+    searchTermElm.addEventListener("input", function(event) {
+        if (searchTermElm.validity.patternMismatch) {
+            searchTermElm.setCustomValidity(`No special characters except for '.' or ':'`);
+        } else {
+            searchTermElm.setCustomValidity("");
+        }
     });
     var form = document.getElementById('inputUrls');
     form.addEventListener('submit', (e) => {
