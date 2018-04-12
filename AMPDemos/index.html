@@ -64,29 +64,11 @@
         max-width: 800px;
     }
 
-    @media(max-width: 500px) {
-        body {
-            margin: 10px;
-        }
-        .container {
-            margin: 0px;
-        }
-        .row {
-            display: flex;
-            flex-flow: row wrap;
-            margin: 10px 0px 15px 0px;
-        }
-        .label {
-            flex: 1 100%;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        .entry {
-            flex: 1 100%;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-        }
+    .mytests {
+        text-align: center;
     }
+
+
 
     input[type="submit"] {
         font-size: 1em;
@@ -115,17 +97,37 @@
         margin-left: 10px;
     }
 
-    #output {
-        visibility: hidden;
-    }
-
-    .mytests {
-        text-align: center;
-    }
-
+    #output,
     #mytests {
-        /*visibility: hidden;*/
         display: none;
+    }
+
+
+    @media(max-width: 500px) {
+        body {
+            margin: 10px;
+        }
+        .container {
+            margin: 0px;
+        }
+        .row {
+            display: flex;
+            flex-flow: row wrap;
+            margin: 10px 0px 15px 0px;
+        }
+        .label {
+            flex: 1 100%;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .entry {
+            flex: 1 100%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+        .mytests {
+            text-align: left;
+        }
     }
     </style>
 </head>
@@ -135,11 +137,12 @@
     <form id="inputUrls" class="container" method="post">
         <div class="row">
             <label class="label" for="canonicalURL">Canonical URL</label>
-            <input type="url" required class="entry textEntry" id="canonicalURL" name="canonicalURL" placeholder="https://ideas.mercadolibre.com/ar/"> </div>
+            <input type="url" required class="entry textEntry" id="canonicalURL" name="canonicalURL" placeholder="https://ideas.mercadolibre.com/ar/">
+        </div>
+
         <div class="row">
             <label class="label" for="searchTerm">Google Search Term</label>
             <input type="text" id="searchTerm" class="entry textEntry" name="searchTerm" required placeholder="ideas mercado libre argentina site:mercadolibre.com"> </div>
-        <!--  pattern="^(?:[\w:.\s])*$ -->
         <div class="row">
             <label class="label">Connection Type</label>
             <div class="entry">
@@ -150,38 +153,39 @@
         <div class="row">
             <label class="label">Videos</label>
             <div class="entry">
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="Canonical">Canonical
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="AMP Origin">AMP Origin
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="AMP Cache">AMP Cache
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="SERP">SERP </div>
+                <input class="checkbox" checked type="checkbox" name="videoCheck" value="canonical">Canonical
+                <input class="checkbox" checked type="checkbox" name="videoCheck" value="origin">AMP Origin
+                <input class="checkbox" checked type="checkbox" name="videoCheck" value="cache">AMP Cache
+                <input class="checkbox" checked type="checkbox" name="videoCheck" value="serp">AMP SERP</div>
         </div>
         <input type="submit" value="Create Video"> </form>
     <hr/>
     <div id="mytests">
         <h2>Test History</h2>
-        <div class="container" id="mytestsContainer"> </div>
-        <hr/> </div>
+        <div class="container" id="mytestsContainer"></div>
+        <hr/>
+    </div>
     <div id="output">
         <div class="container">
             <h2>Output</h2>
             <div class="row">
                 <div class="label output">Canonical</div>
-                <div class="wptlink" id="originalWPT"></div>
-                <div class="entry" id="originalUrl"></div>
+                <div class="wptlink" id="canonicalWPTLink"></div>
+                <div class="entry" id="canonicalUrl"></div>
             </div>
             <div class="row">
                 <div class="label output">AMP Origin</div>
-                <div class="wptlink" id="ampOriginWPT"></div>
-                <div class="entry" id="ampUrl"></div>
+                <div class="wptlink" id="originWPTLink"></div>
+                <div class="entry" id="originUrl"></div>
             </div>
             <div class="row">
                 <div class="label output">AMP Cache</div>
-                <div class="wptlink" id="ampCacheWPT"></div>
-                <div class="entry" id="cdnAmpUrl"></div>
+                <div class="wptlink" id="cacheWPTLink"></div>
+                <div class="entry" id="cacheUrl"></div>
             </div>
             <div class="row">
                 <div class="label output">AMP SERP</div>
-                <div class="wptlink" id="ampSERPWPT"></div>
+                <div class="wptlink" id="serpWPTLink"></div>
                 <div class="entry"></div>
             </div>
         </div>
@@ -192,6 +196,11 @@
         <iframe id="wptiframe"></iframe>
     </div>
     <script>
+    var WPT_API_KEY = 'bb38fe0ba4c5458abf62f7f294398a85';
+    var RUNS = 3;
+    var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
+    var AMP_BATCH_API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
+
     var dbPromise = idb.open('AMPDemos', 1, (function(upgradeDb) {
         if (!upgradeDb.objectStoreNames.contains('Tests')) {
             var queuedRequests = upgradeDb.createObjectStore('Tests', {
@@ -209,15 +218,12 @@
         });
     }
 
+    // get test history
     function getTests() {
-        dbPromise.then(function(db) {
-            var tx = db.transaction('Tests', 'readonly');
-            var store = tx.objectStore('Tests');
-            return store.getAll();
-        }).then(function(items) {
+        dbPromise.then(db => db.transaction('Tests', 'readonly').objectStore('Tests').getAll()).then(items => {
             let mytestsContainer = document.getElementById('mytestsContainer');
             if (items.length > 0) {
-                document.getElementById('mytests').style.display = "block"; // = "visible";
+                document.getElementById('mytests').style.display = "block";
                 for (let i = 0; i < items.length; i++) {
                     let row = document.createElement('div');
                     row.classList = "row";
@@ -229,37 +235,27 @@
             }
         });
     }
+    getTests();
 
-    function saveTest(_url, _wptLink) {
-        dbPromise.then(function(db) {
-            var tx = db.transaction('Tests', 'readwrite');
-            var store = tx.objectStore('Tests');
-            store.add({ url: _url, wptLink: _wptLink });
-            return tx.complete;
-        });
+    // save test to IndexedDB
+    function saveTest(url, wptLink) {
+        dbPromise.then(db => db.transaction('Tests', 'readwrite').objectStore('Tests').add({ url: url, wptLink: wptLink }).complete);
     }
 
-    function runWPT(url, connection, _test) {
-        let connectionType;
-        if (connection === "2G") connectionType = "2G";
-        else if (connection === "3G") connectionType = "3GFast";
-        else if (connection === "4G") connectionType = "4G";
-        return fetch(`https://www.webpagetest.org/runtest.php?k=bb38fe0ba4c5458abf62f7f294398a85&url=${url}&f=json&runs=3&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connectionType}`, {
+    // run WPT
+    function runWPT(url, connection, name) {
+        return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&url=${url}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}`, {
             'method': 'GET',
         }).then(response => response.text()).then(json => {
             return {
-                test: _test,
+                name: name,
                 id: JSON.parse(json).data.testId
             };
         });
     }
 
-    function runScriptedWPT(searchTerm, ampUrl, connection, _test) {
-        let connectionType;
-        if (connection === "2G") connectionType = "2G";
-        else if (connection === "3G") connectionType = "3GFast";
-        else if (connection === "4G") connectionType = "4G";
-        // TODO: physical device = Dulles_MotoG4%3AMoto%20G4%20-%20Chrome%20Beta.
+    // run scripted WPT
+    function runScriptedWPT(searchTerm, ampUrl, connection, name) {
         let script =
             `logData    0
 navigate    https://www.google.com/search?q=${encodeURIComponent(searchTerm)}
@@ -276,103 +272,92 @@ exec    window.scrollBy(0, 600);
 sleep   5
 logData 1
 execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
-        return fetch(`https://www.webpagetest.org/runtest.php?k=bb38fe0ba4c5458abf62f7f294398a85&f=json&runs=3&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connectionType}&script=${encodeURIComponent(script)}`, {
-            'method': 'GET',
-        }).then(response => response.text()).then(json => {
+        return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}&script=${encodeURIComponent(script)}`).then(response => response.text()).then(json => {
             return {
-                test: _test,
+                name: name,
                 id: JSON.parse(json).data.testId
             };
         });
     }
-    getTests();
-    var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
-    var API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
-    var searchTermElm = document.getElementById('searchTerm');
-    var form = document.getElementById('inputUrls');
-    form.addEventListener('submit', (e) => {
-        console.log('submit');
-        e.preventDefault();
-        var formData = new FormData(document.getElementById('inputUrls'));
-        fetch(`${AMP_BATCH_URL}?key=${API_KEY}`, {
-            'body': `{"urls":["${formData.get('canonicalURL')}"]}`,
+
+    // call AMP URL API to get AMP and AMP Cache URLs given canonical URL
+    function callAMPBatchURLAPI(url) {
+        return fetch(`${AMP_BATCH_URL}?key=${AMP_BATCH_API_KEY}`, {
+            'body': `{"urls":["${url}"]}`,
             method: 'POST',
             headers: new Headers([
                 ['Content-Type', 'application/json']
             ]),
-        }).then(response => response.json()).then(json => {
-            document.getElementById('output').style.visibility = 'visible';
-            let originalUrl = json.ampUrls[0].originalUrl;
-            let ampUrl = json.ampUrls[0].ampUrl;
-            let cdnAmpUrl = json.ampUrls[0].cdnAmpUrl;
-            let searchTerm = formData.get('searchTerm'); //.replace(/ /g, '%2B').replace(/\:/g, '%3A');
-            let connection = formData.get('connectionType');
-            var promises = [];
-            var checks = document.querySelectorAll('.checkbox');
-            let Canonical = false,
-                AMPOrigin = false,
-                AMPCache = false,
-                SERP = false;
-            checks.forEach(check => {
-                if (check.checked) {
-                    switch (check.value) {
-                        case "Canonical":
-                            promises.push(runWPT(originalUrl, connection, check.value));
-                            Canonical = true;
-                            break;
-                        case "AMP Origin":
-                            promises.push(runWPT(ampUrl, connection, check.value));
-                            AMPOrigin = true;
-                            break;
-                        case "AMP Cache":
-                            promises.push(runWPT(cdnAmpUrl, connection, check.value));
-                            AMPCache = true;
-                            break;
-                        case "SERP":
-                            promises.push(runScriptedWPT(searchTerm, ampUrl, connection, check.value));
-                            SERP = true;
-                            break;
-                    }
-                }
-            });
-            let first = true;
-            Promise.all(promises).then(values => {
-                window.values = values;
-                let compareVideosURL = `https://www.webpagetest.org/video/compare.php?tests=`;
-                values.forEach(val => {
-                    if (!first) {
-                        compareVideosURL += `,`;
-                    }
-                    first = false;
-                    compareVideosURL += `${val.id}-l:${val.test}-c:0`;
-                    switch (val.test) {
-                        case "Canonical":
-                            document.getElementById('originalWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                            break;
-                        case "AMP Origin":
-                            document.getElementById('ampOriginWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                            break;
-                        case "AMP Cache":
-                            document.getElementById('ampCacheWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                            break;
-                        case "SERP":
-                            document.getElementById('ampSERPWPT').innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
-                            break;
-                    }
-                });
-                compareVideosURL += `&ival=1000`;
-                document.getElementById('comparisonLink').href = compareVideosURL;
-                document.getElementById('wptiframe').src = compareVideosURL;
-                saveTest(originalUrl, compareVideosURL);
-                gtag('event', 'Run Test', {
-                    'event_category': `${connection}`,
-                    'event_label': `url=${originalUrl}&searchTerm=${searchTerm}&link=${compareVideosURL}`
-                });
-            });
-            document.getElementById('originalUrl').innerHTML = `<code><a href='${originalUrl}'>${originalUrl}</a></code>`;
-            document.getElementById('ampUrl').innerHTML = `<code><a href='${ampUrl}'>${ampUrl}</a></code>`;
-            document.getElementById('cdnAmpUrl').innerHTML = `<code><a href='${cdnAmpUrl}'>${cdnAmpUrl}</a></code>`;
+        }).then(response => response.json());
+
+    }
+
+    var urlInput = document.getElementById("canonicalURL");
+    var AMPUrlsJson;
+
+    // check to make sure canonical URL has AMP equivalent as soon as user enters it
+    urlInput.addEventListener('change', (e) => {
+        urlInput.setCustomValidity("Checking if URL is valid, try again in a moment");
+        callAMPBatchURLAPI(urlInput.value).then(json => {
+            AMPUrlsJson = json;
+            if (json["urlErrors"])
+                urlInput.setCustomValidity("Did not find AMP version. Enter a URL with an AMP equivalent.");
+            else
+                urlInput.setCustomValidity('');
         });
+    });
+
+    var form = document.getElementById('inputUrls');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        var formData = new FormData(form);
+
+        document.getElementById('output').style.display = 'block';
+        let connection = (formData.get('connectionType') === "3G") ? "3GFast" : formData.get('connectionType');
+
+        let testInfo = {
+            canonical: { url: AMPUrlsJson.ampUrls[0].originalUrl, label: 'Canonical', run: false },
+            origin: { url: AMPUrlsJson.ampUrls[0].ampUrl, label: 'AMP Origin', run: false },
+            cache: { url: AMPUrlsJson.ampUrls[0].cdnAmpUrl, label: 'AMP Cache', run: false },
+            serp: { url: formData.get('searchTerm'), label: 'AMP SERP', run: false },
+        };
+
+        // run all tests
+        var promises = [];
+        document.querySelectorAll('.checkbox').forEach(check => {
+            if (check.checked) {
+                if (check.value === "serp")
+                    promises.push(runScriptedWPT(testInfo[check.value].url, testInfo.origin.url, connection, check.value));
+                else
+                    promises.push(runWPT(testInfo[check.value].url, connection, check.value));
+            }
+        });
+
+        // after tests have kicked off, populate links
+        let first = true;
+        Promise.all(promises).then(values => {
+            let compareVideosURL = `https://www.webpagetest.org/video/compare.php?tests=`;
+            values.forEach(val => {
+                if (!first) compareVideosURL += `,`;
+                first = false;
+                compareVideosURL += `${val.id}-l:${testInfo[val.name].label}-c:0`;
+                document.getElementById(`${val.name}WPTLink`).innerHTML = `<a target="_blank" href='https://www.webpagetest.org/result/${val.id}'>WPT Link</a>`;
+            });
+            compareVideosURL += `&ival=1000`;
+
+            document.getElementById('comparisonLink').href = compareVideosURL;
+            document.getElementById('wptiframe').src = compareVideosURL;
+
+            saveTest(testInfo.canonical.url, compareVideosURL);
+            gtag('event', 'Run Test', {
+                'event_category': `${connection}`,
+                'event_label': `url=${testInfo.canonical.url}&searchTerm=${searchTerm}&link=${compareVideosURL}`
+            });
+        });
+
+        document.getElementById('canonicalUrl').innerHTML = `<code><a href='${testInfo.canonical.url}'>${testInfo.canonical.url}</a></code>`;
+        document.getElementById('originUrl').innerHTML = `<code><a href='${testInfo.origin.url}'>${testInfo.origin.url}</a></code>`;
+        document.getElementById('cacheUrl').innerHTML = `<code><a href='${testInfo.cache.url}'>${testInfo.cache.url}</a></code>`;
     });
     </script>
 </body>
