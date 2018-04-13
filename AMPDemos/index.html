@@ -348,7 +348,7 @@ execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
             saveTest(testInfo.canonical.url, compareVideosURL);
             gtag('event', 'Run Test', {
                 'event_category': `${connection}`,
-                'event_label': `url=${testInfo.canonical.url}&searchTerm=${serp.url}&link=${compareVideosURL}`
+                'event_label': `url=${testInfo.canonical.url}&searchTerm=${testInfo.serp.url}&link=${compareVideosURL}`
             });
         });
 
