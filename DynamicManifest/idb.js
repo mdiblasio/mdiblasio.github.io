@@ -1,3 +1,4 @@
+// helper IndexedDB library: https://github.com/jakearchibald/idb
 
 'use strict';
 
