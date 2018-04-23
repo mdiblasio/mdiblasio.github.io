@@ -5,14 +5,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1,user-scalable=no" />
     <title>AMP Demos</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114121901-1"></script>
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114121901-1"></script> -->
     <script src="idb.js"></script>
     <script>
     window.dataLayer = window.dataLayer || [];
 
     function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'UA-114121901-1', { 'page_title': 'AMP Demos v4' });
+    // gtag('js', new Date());
+    // gtag('config', 'UA-114121901-1', { 'page_title': 'AMP Demos v4' });
     </script>
     <style>
     body {
@@ -100,6 +100,34 @@
         display: none;
     }
 
+    #collapse-script {
+        display: none;
+    }
+
+    #toggle {
+        width: 100%;
+        height: 20px;
+        cursor: pointer;
+        display: flex;
+    }
+
+    #script {
+        padding: 15px;
+        display: none;
+        background-color: lightgray;
+        max-width: 1000px;
+    }
+
+    #togglesvg {
+        width: 20px;
+        height: 20px;
+        margin: 0px 5px;
+    }
+
+    #togglesvg[expanded=true] {
+        transform: rotate(90deg) translate(0, 0);
+    }
+
     @media(max-width: 500px) {
         body {
             margin: 10px;
@@ -124,6 +152,11 @@
         }
         .mytests {
             text-align: left;
+        }
+
+        #script {
+            padding: 10px;
+            max-width: calc(100vw - 50px);
         }
     }
     </style>
@@ -150,10 +183,10 @@
         <div class="row">
             <label class="label">Videos</label>
             <div class="entry">
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="canonical">Canonical
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="origin">AMP Origin
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="cache">AMP Cache
-                <input class="checkbox" checked type="checkbox" name="videoCheck" value="serp">AMP SERP</div>
+                <input class="checkbox" checked type="checkbox" name="videoCheck" id="videoCheck1" value="canonical"><label for="videoCheck1">Canonical</label>
+                <input class="checkbox" checked type="checkbox" name="videoCheck" id="videoCheck2" value="origin"><label for="videoCheck2">AMP Origin</label>
+                <input class="checkbox" checked type="checkbox" name="videoCheck" id="videoCheck3" value="cache"><label for="videoCheck3">AMP Cache</label>
+                <input class="checkbox" checked type="checkbox" name="videoCheck" id="videoCheck4" value="serp"><label for="videoCheck4">AMP SERP</label></div>
         </div>
         <input type="submit" value="Create Video"> </form>
     <hr/>
@@ -183,7 +216,17 @@
             <div class="row">
                 <div class="label output">AMP SERP</div>
                 <div class="wptlink" id="serpWPTLink"></div>
-                <div class="entry"></div>
+                <div class="entry">
+                    <div id="collapse-script">
+                        <div id="toggle" collapsed>
+                            <svg id="togglesvg" width="100" height="100" viewBox="-25 0 100 100" preserveAspectRatio>
+                                <polygon points="0,80 50,40 0,0" id="togglesvg" />
+                            </svg>
+                            <text>View WebpageTest Script</text>
+                        </div>
+                        <code id="script"></code>
+                    </div>
+                </div>
             </div>
         </div>
         <p id="instructions">
@@ -239,6 +282,18 @@
         dbPromise.then(db => db.transaction('Tests', 'readwrite').objectStore('Tests').add({ url: url, wptLink: wptLink }).complete);
     }
 
+    var toggle = document.getElementById('toggle');
+    var toggleSvg = document.getElementById('togglesvg');
+    var scriptBox = document.getElementById('script');
+    var expanded = false;
+
+    toggle.addEventListener('click', (e) => {
+        console.log('clicked');
+        scriptBox.style.display = expanded ? "none" : "block";
+        toggleSvg.setAttribute("expanded", !expanded);
+        expanded = !expanded;
+    });
+
     // run WPT
     function runWPT(url, connection, name) {
         return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&url=${url}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}`, {
@@ -269,6 +324,8 @@ exec    window.scrollBy(0, 600);
 sleep   5
 logData 1
 execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
+        document.getElementById('collapse-script').style.display = 'block';
+        document.getElementById('script').innerText = script;
         return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}&script=${encodeURIComponent(script)}`).then(response => response.text()).then(json => {
             return {
                 name: name,
