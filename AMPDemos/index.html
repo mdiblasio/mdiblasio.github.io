@@ -237,7 +237,7 @@
     </div>
     <script>
     var WPT_API_KEY = 'bb38fe0ba4c5458abf62f7f294398a85';
-    var RUNS = 3;
+    var RUNS = 1;
     var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
     var AMP_BATCH_API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
 
@@ -296,7 +296,7 @@
 
     // run WPT
     function runWPT(url, connection, name) {
-        return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&url=${url}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}`, {
+        return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&url=${encodeURIComponent(url)}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}`, {
             'method': 'GET',
         }).then(response => response.text()).then(json => {
             return {
