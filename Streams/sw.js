@@ -55,7 +55,7 @@ const PRECACHE_LIST = [
 
 workbox.precaching.precacheAndRoute(PRECACHE_LIST);
 
-importScripts("/utils/idb.js");
+importScripts("/Streams/utils/idb.js");
 
 const dbPromise = idb.open('streams-demo', 2, upgradeDB => {
   if (!upgradeDB.objectStoreNames.contains('usersettings')) {
