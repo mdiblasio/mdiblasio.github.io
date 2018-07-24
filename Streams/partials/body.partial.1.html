@@ -37,7 +37,7 @@ rangeInput.addEventListener('change', (e) => {
 rangeRequestForm.addEventListener('submit', (e) => {
   e.preventDefault();
 
-  fetch(new Request('/data/guide.txt', {
+  fetch(new Request('/Streams/data/guide.txt', {
       headers: {
         Range: `bytes=${range}`,
       }
@@ -51,7 +51,7 @@ rangeRequestForm.addEventListener('submit', (e) => {
   return false;
 });
 
-fetch("/data/guide.txt")
+fetch("/Streams/data/guide.txt")
   .then(response => response.text())
   .then(text => {
     guideTxt.innerText = text;
