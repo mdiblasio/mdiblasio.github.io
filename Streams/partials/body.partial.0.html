@@ -1,0 +1,35 @@
+<div id="accountModule">
+  <h4>Account</h4>
+  <div class="module accountModule" id="logoutModule" style="display:none;">
+    <button id="logoutBtn">Logout</button>
+  </div>
+  <div class="module accountModule" id="loginModule" style="display:none;">
+    <form id="loginForm">
+      <label for="usernameInput">Username:</label>
+      <input id="usernameInput" type="username" required />
+      <button type="submit" id="loginFormBtn">Login</button>
+    </form>
+  </div>
+</div>
+<script type="module">
+  import * as utils from "./utils/utils.js";
+
+  var usernameInput = document.getElementById("usernameInput");
+  var loginFormBtn = document.getElementById("loginFormBtn");
+  var logoutBtn = document.getElementById("logoutBtn");
+
+  var username;
+
+  logoutBtn.addEventListener('click', (e) => {
+    utils.logout();
+  });
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    utils.updateUsername(usernameInput.value);
+    utils.updateHeader();
+  });
+
+// e.preventDefault();
+</script>

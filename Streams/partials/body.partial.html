@@ -1,0 +1,58 @@
+<h4>Make Range Request</h4>
+<div class="module">
+  <label for="guideTxt">guide.txt</label>
+  <div class="textBox" id="guideTxt"></div>
+</div>
+<div class="module">
+  <form id="rangeRequestForm">
+    <label for="rangeInput">Enter range:</label>
+    <input id="rangeInput" type="text" placeholder="1-304" required pattern="^\d+-\d+$" />
+    <button type="submit" id="requestRangeBtn">Request Range</button>
+  </form>
+</div>
+<div class="module">
+  <label for="rangeResponse">Response:</label>
+  <div class="textBox" id="rangeResponse"></div>
+</div>
+<script>
+var rangeInput = document.getElementById("rangeInput");
+var requestRangeBtn = document.getElementById("requestRangeBtn");
+var rangeResponse = document.getElementById("rangeResponse");
+var guideTxt = document.getElementById("guideTxt");
+var rangeRequestForm = document.getElementById("rangeRequestForm");
+var range, start, end;
+
+rangeInput.addEventListener('change', (e) => {
+  [range, start, end] = rangeInput.value.match(/^(\d+)-(\d+)$/);
+  console.log(`range = ${range}\nstart = ${start}\nend = ${end}`);
+
+  if (end > 304 || start > end) {
+    rangeInput.setCustomValidity("Must be a valid range from 0 to 304");
+  } else {
+    rangeInput.setCustomValidity("");
+  }
+});
+
+rangeRequestForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  fetch(new Request('/data/guide.txt', {
+      headers: {
+        Range: `bytes=${range}`,
+      }
+    }))
+    .then((response) => response.text())
+    .then((responseText) => {
+      console.log(`Received response: '${responseText}'`);
+      rangeResponse.innerText = responseText;
+    });
+
+  return false;
+});
+
+fetch("/data/guide.txt")
+  .then(response => response.text())
+  .then(text => {
+    guideTxt.innerText = text;
+  });
+</script>

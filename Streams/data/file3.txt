@@ -1,0 +1,1 @@
+<p>Yeah, ok, it's a touch bold to talk about something being the thing of the year as early as January, but the potential of the web streams API has gotten me all excited.</p>

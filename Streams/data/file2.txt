@@ -1,0 +1,1 @@
+<p>TL;DR: Streams can be used to do fun things like turn clouds to butts, transcode MPEG to GIF, but most importantly, they can be combined with service workers to become the fastest way to serve content.</p>
