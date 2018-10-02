@@ -193,6 +193,14 @@
   <h1>AMP Demos</h1>
   <form id="inputUrls" class="container" method="post">
     <div class="row">
+      <label class="label" for="wptApiKey">
+        <span class="tooltip">WebpageTest API Key
+          <span class="tooltiptext">Your private API Key from webpagetest.org</span>
+      </label>
+      <input type="text" id="wptApiKey" class="entry textEntry" name="wptApiKey" required placeholder="YOUR-PRIVATE-API-KEY">
+    </div>
+
+    <div class="row">
       <label class="label" for="canonicalURL">
         <span class="tooltip">Canonical URL
           <span class="tooltiptext">Enter the non-AMP URL</span>
@@ -205,15 +213,28 @@
         <span class="tooltip">Google Search Term
           <span class="tooltiptext">Enter a Google search term that returns the AMP page in the first page of results. You can limit results to a domain by adding "site:domain.com". Often, the canonical URL as the search term works.</span>
       </label>
+      <input type="text" id="searchTerm" class="entry textEntry" name="searchTerm" required placeholder="ideas mercado libre argentina site:mercadolibre.com">
+    </div>
 
-      <input type="text" id="searchTerm" class="entry textEntry" name="searchTerm" required placeholder="ideas mercado libre argentina site:mercadolibre.com"> </div>
     <div class="row">
       <label class="label">Connection Type</label>
       <div class="entry">
         <input type="radio" id="connectionChoice1" name="connectionType" value="2G">2G
         <input type="radio" id="connectionChoice2" name="connectionType" value="3G" checked>3G
-        <input type="radio" id="connectionChoice3" name="connectionType" value="4G">4G </div>
+        <input type="radio" id="connectionChoice3" name="connectionType" value="4G">4G
+      </div>
     </div>
+
+    <!--     <div class="row">
+      <label class="label">Device</label>
+      <div class="entry">
+        <select name="device">
+          <option value="motoG4">Moto G4</option>
+          <option value="iPhone6">iPhone 6 iOS 12</option>
+        </select>
+      </div>
+    </div> -->
+
     <div class="row">
       <label class="label">Videos</label>
       <div class="entry">
@@ -238,11 +259,13 @@
     </div>
     <input type="submit" value="Create Video"> </form>
   <hr/>
+
   <div id="mytests">
     <h2>Test History</h2>
     <div class="container" id="mytestsContainer"></div>
     <hr/>
   </div>
+
   <div id="output">
     <div class="container">
       <h2>Output</h2>
@@ -283,8 +306,8 @@
     </p>
     <iframe id="wptiframe"></iframe>
   </div>
+
   <script>
-  var WPT_API_KEY = 'bb38fe0ba4c5458abf62f7f294398a85';
   var RUNS = 1;
   var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
   var AMP_BATCH_API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
@@ -343,8 +366,8 @@
   });
 
   // run WPT
-  function runWPT(url, connection, name) {
-    return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&url=${encodeURIComponent(url)}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}`, {
+  function runWPT(url, connection, name, api_key) {
+    return fetch(`https://www.webpagetest.org/runtest.php?k=${api_key}&url=${encodeURIComponent(url)}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}`, {
       'method': 'GET',
     }).then(response => response.text()).then(json => {
       return {
@@ -355,7 +378,7 @@
   }
 
   // run scripted WPT
-  function runScriptedWPT(searchTerm, ampUrl, connection, name) {
+  function runScriptedWPT(searchTerm, ampUrl, connection, name, api_key) {
     let script =
       `logData    0
 navigate    https://www.google.com/search?q=${encodeURIComponent(searchTerm)}
@@ -374,7 +397,7 @@ logData 1
 execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
     document.getElementById('collapse-script').style.display = 'block';
     document.getElementById('script').innerText = script;
-    return fetch(`https://www.webpagetest.org/runtest.php?k=${WPT_API_KEY}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}&script=${encodeURIComponent(script)}`).then(response => response.text()).then(json => {
+    return fetch(`https://www.webpagetest.org/runtest.php?k=${api_key}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}&script=${encodeURIComponent(script)}`).then(response => response.text()).then(json => {
       return {
         name: name,
         id: JSON.parse(json).data.testId
@@ -416,6 +439,8 @@ execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
 
     document.getElementById('output').style.display = 'block';
     let connection = (formData.get('connectionType') === "3G") ? "3GFast" : formData.get('connectionType');
+    let device = formData.get('device');
+    let wptApiKey = formData.get('wptApiKey');
 
     let testInfo = {
       canonical: { url: AMPUrlsJson.ampUrls[0].originalUrl, label: 'Canonical', run: false },
@@ -429,9 +454,9 @@ execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
     document.querySelectorAll('.checkbox').forEach(check => {
       if (check.checked) {
         if (check.value === "serp")
-          promises.push(runScriptedWPT(testInfo[check.value].url, testInfo.origin.url, connection, check.value));
+          promises.push(runScriptedWPT(testInfo[check.value].url, testInfo.origin.url, connection, check.value, wptApiKey));
         else
-          promises.push(runWPT(testInfo[check.value].url, connection, check.value));
+          promises.push(runWPT(testInfo[check.value].url, connection, check.value, wptApiKey));
       }
     });
 
