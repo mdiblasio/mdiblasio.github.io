@@ -312,12 +312,19 @@
   var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
   var AMP_BATCH_API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
 
-  var dbPromise = idb.open('AMPDemos', 1, (function(upgradeDb) {
+  var dbPromise = idb.open('AMPDemos', 3, (function(upgradeDb) {
     if (!upgradeDb.objectStoreNames.contains('Tests')) {
       var queuedRequests = upgradeDb.createObjectStore('Tests', {
         unique: true,
         autoIncrement: true,
         keyPath: 'id',
+      });
+    }
+    if (!upgradeDb.objectStoreNames.contains('API_Keys')) {
+      upgradeDb.createObjectStore('API_Keys', {
+        unique: true,
+        // autoIncrement: true,
+        keyPath: 'keyType',
       });
     }
   }));
@@ -352,6 +359,20 @@
   function saveTest(url, wptLink) {
     dbPromise.then(db => db.transaction('Tests', 'readwrite').objectStore('Tests').add({ url: url, wptLink: wptLink }).complete);
   }
+
+  // save API KEY to IndexedDB
+  function saveWPTAPIKey(wptApiKey) {
+    dbPromise.then(db => db.transaction('API_Keys', 'readwrite').objectStore('API_Keys').add({ keyType: 'WPT', apiKey: wptApiKey }).complete);
+  }
+
+  // get WPT API key if it exists
+  function getWPTAPIKey() {
+    dbPromise.then(db => db.transaction('API_Keys', 'readonly').objectStore('API_Keys').get('WPT')).then(key => {
+      if (key)
+        document.getElementById('wptApiKey').value = key.apiKey;
+    });
+  }
+  getWPTAPIKey();
 
   var toggle = document.getElementById('toggle');
   var toggleSvg = document.getElementById('togglesvg');
@@ -430,6 +451,11 @@ execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
       else
         urlInput.setCustomValidity('');
     });
+  });
+
+  var wptApiKeyInput = document.getElementById("wptApiKey");
+  wptApiKeyInput.addEventListener('change', (e) => {
+    saveWPTAPIKey(wptApiKeyInput.value);
   });
 
   var form = document.getElementById('inputUrls');
