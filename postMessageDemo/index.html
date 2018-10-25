@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Sports Demo PWA</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="widget.js"></script>
+  <script src="idb.js"></script>
+  <style>
+  body {
+    font-size: 20px;
+    margin: 20px;
+  }
+
+  .option {
+    display: block;
+  }
+
+  .section {
+    margin: 20px 0px;
+    /*border: .2px solid lightgray;*/
+  }
+
+  button {
+    width: 150px;
+    margin: 10px 0px;
+    padding: 5px;
+    font-size: 16px;
+    height: 35px;
+  }
+
+  #score {
+    width: 250px;
+    margin: 10px;
+    padding: 5px;
+    text-align: center;
+    font-size: 16px;
+    background-color: lightgray;
+    border: .2px solid gray;
+    height: 35px;
+  }
+
+  label {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  hr {
+    margin: 25px 0px;
+  }
+
+  #preferenceChoice,
+  #preferences {
+    /*display: none;*/
+  }
+
+  .widget {
+    margin: 20px 0px;
+    padding: 20px;
+    border: .2px solid lightgray;
+    max-width: 400px;
+  }
+  </style>
+</head>
+
+<body>
+
+
+  <div class="section" id="preferenceChoice">
+    <h3>Change country preference:</h3>
+    <button class="option" onclick="setUserPreference('country','USA')">USA</button>
+    <button class="option" onclick="setUserPreference('country','EUR')">EUR</button>
+  </div>
+
+  <hr/>
+
+  <div class="section" id="preferences">
+    <label>Your country preference is:</label>
+    <span id="countryPref" />
+  </div>
+  <hr/>
+  <div class="section">
+    <button id="fetchScore" onclick="updateScore()">Fetch Score</button>
+    <input type="text" id="score" />
+  </div>
+  <hr/>
+
+  <!-- <my-widget></my-widget> -->
+
+  <h3>Widgets</h3>
+  <div id="widgets"></div>
+
+
+  <div class="widget">
+    <label>Last updated:</label>
+    <span id="widget1-lastupdated"></span>
+    <script>
+
+
+    </script>
+  </div>
+
+
+  <script>
+  var dbPromise = idb.open('sportsDemoPWA', 1, function(upgradeDb) {
+    console.log(`Creating object store 'userPreferences'`);
+    if (!upgradeDb.objectStoreNames.contains('userPreferences')) {
+      upgradeDb.createObjectStore('userPreferences', { keyPath: 'preference' });
+    }
+  });
+
+  function getCountryPreference() {
+    dbPromise.then(function(db) {
+      return db.transaction('userPreferences', 'readwrite')
+        .objectStore('userPreferences')
+        .get('country');
+    }).then(function(val) {
+      if (val) {
+        // document.getElementById('preferences').style.display = 'block';
+        // document.getElementById('preferenceChoice').style.display = 'none';
+        document.getElementById('countryPref').innerText = val.setting;
+      } else {
+        // document.getElementById('preferenceChoice').style.display = 'block';
+        // document.getElementById('preferences').style.display = 'none';
+      }
+    });
+  }
+
+  function createWidgets(num) {
+    let widgets = document.getElementById('widgets');
+    for (let i = 1; i <= num; i++) {
+      let widget = document.createElement('div');
+      widget.id = `widget${i}`;
+      widget.classList = "widget";
+      widget.innerHTML = `<label>Last updated:    </label><span id="widget${i}-lastupdated"></span>`;
+      widgets.appendChild(widget);
+    }
+  }
+  createWidgets(10);
+
+  getCountryPreference();
+
+  function setUserPreference(preference, setting) {
+    dbPromise.then(function(db) {
+      return db.transaction('userPreferences', 'readwrite')
+        .objectStore('userPreferences')
+        .put({
+          preference: preference,
+          setting: setting
+        })
+        .complete;
+    }).then(function() {
+      console.log('added item to the store os!');
+      getCountryPreference();
+    });
+  }
+
+  function updateScore() {
+    fetch('score')
+      .then(res => res.text())
+      .then(score => {
+        // console.log(score);
+        document.getElementById('score').value = score;
+      });
+  }
+
+  var lastUpdated = (new Date()).getTime();
+
+  function checkIsUpdating() {
+    console.log("checkIsUpdating()...");
+    const now = (new Date()).getTime();
+    if (now - lastUpdated > 15 * 1000) {
+      console.log("Score not updating... fallback to default!");
+    } else {
+      setTimeout(checkIsUpdating, 5 * 1000);
+      console.log("Scores are updating!");
+    }
+  }
+
+  setTimeout(checkIsUpdating, 5 * 1000);
+
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    console.log('Post message received');
+    lastUpdated = (new Date()).getTime();
+    document.querySelectorAll('.widget').forEach(widget => {
+      widget.querySelector('span').innerText = event.data.updated;
+
+    });
+  });
+
+  /*
+
+    document.getElementById('getABTestGroup').addEventListener('click', () => {
+      fetch('getABTestGroup')
+        .then(response => {
+          return response.text();
+        }).then(text => {
+          document.getElementById('container').innerHTML = text;
+        });
+    });
+    */
+  </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(function(registration) {
+        console.log('Service Worker registration successful with scope: ',
+          registration.scope);
+      })
+      .catch(function(err) {
+        console.log('Service Worker registration failed: ', err);
+      });
+  }
+  </script>
+
+</body>
+
+</html>
