@@ -96,8 +96,6 @@
     <label>Last updated:</label>
     <span id="widget1-lastupdated"></span>
     <script>
-
-
     </script>
   </div>
 
@@ -110,6 +108,23 @@
     }
   });
 
+  const MINIMUM_UPDATE_INTERVAL_SECONDS = 30;
+
+  function checkIsUpdating() {
+    console.log("checkIsUpdating()...");
+    const now = (new Date()).getTime();
+    if (now - lastUpdated > MINIMUM_UPDATE_INTERVAL_SECONDS * 1000) {
+      console.log("Score not updating... fallback to default!");
+      document.querySelectorAll('.widget').forEach(widget => {
+        widget.style.backgroundColor = 'red';
+      });
+
+    } else {
+      setTimeout(checkIsUpdating, MINIMUM_UPDATE_INTERVAL_SECONDS * 1000);
+      console.log("Scores are updating!");
+    }
+  }
+
   function getCountryPreference() {
     dbPromise.then(function(db) {
       return db.transaction('userPreferences', 'readwrite')
@@ -120,6 +135,7 @@
         // document.getElementById('preferences').style.display = 'block';
         // document.getElementById('preferenceChoice').style.display = 'none';
         document.getElementById('countryPref').innerText = val.setting;
+        setTimeout(checkIsUpdating, MINIMUM_UPDATE_INTERVAL_SECONDS * 1000);
       } else {
         // document.getElementById('preferenceChoice').style.display = 'block';
         // document.getElementById('preferences').style.display = 'none';
@@ -153,6 +169,7 @@
     }).then(function() {
       console.log('added item to the store os!');
       getCountryPreference();
+      navigator.serviceWorker.controller.postMessage({ command: 'subscribedClient' });
     });
   }
 
@@ -167,19 +184,6 @@
 
   var lastUpdated = (new Date()).getTime();
 
-  function checkIsUpdating() {
-    console.log("checkIsUpdating()...");
-    const now = (new Date()).getTime();
-    if (now - lastUpdated > 15 * 1000) {
-      console.log("Score not updating... fallback to default!");
-    } else {
-      setTimeout(checkIsUpdating, 5 * 1000);
-      console.log("Scores are updating!");
-    }
-  }
-
-  setTimeout(checkIsUpdating, 5 * 1000);
-
   navigator.serviceWorker.addEventListener('message', function(event) {
     console.log('Post message received');
     lastUpdated = (new Date()).getTime();
@@ -187,6 +191,7 @@
       widget.querySelector('span').innerText = event.data.updated;
 
     });
+    navigator.serviceWorker.controller.postMessage({ command: 'subscribedClient' });
   });
 
   /*
@@ -207,6 +212,22 @@
       .then(function(registration) {
         console.log('Service Worker registration successful with scope: ',
           registration.scope);
+        // console.log(registration);
+        // registration.onupdatefound = (event) => {
+        //   console.log('onupdatefound');
+        //   console.log(event);
+        //   var installingWorker = registration.installing;
+        //   installingWorker.onstatechange = (event) => {
+        //     console.log('installingWorker.onstatechange');
+        //     console.log(event);
+        //   }
+        //   // navigator.serviceWorker.controller.postMessage({ command: 'subscribedClient' });
+        //   // if (event.state === 'waiting') alertUser(event.registration);
+        // };
+        // navigator.serviceWorker.controller.postMessage({ command: 'subscribedClient' }); 
+        // navigator.serviceWorker.ready.then(function(reg) {
+
+        // });
       })
       .catch(function(err) {
         console.log('Service Worker registration failed: ', err);

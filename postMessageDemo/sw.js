@@ -43,7 +43,8 @@ const postMessagePlugin = {
       // Use whatever message body makes the most sense.
       // Note that `Response` objects can't be serialized.
       console.log(`[SW] Sending postMessage() to ${clients.length} clients`);
-      client.postMessage({ event: "scoreUpdate", updated: time });
+      client.postMessage({ command: "scoreUpdate", updated: time });
+      subscribedClients = 0;
     }
     // }
   },
@@ -55,20 +56,35 @@ const postMessagePlugin = {
 //   workbox.strategies.staleWhileRevalidate({
 //     plugins: [postMessagePlugin],
 //   })
-// );
+// );dddd
 
 const apiStrategy = workbox.strategies.staleWhileRevalidate({
   cacheName: 'score',
   plugins: [postMessagePlugin],
 });
 
-setInterval(() => {
-  // console.log("now");
-  getCountryPreference().then(val => {
-    return apiStrategy.makeRequest({ request: `score/${val.setting.toLowerCase()}.txt` });
-    // return fetch(`score/${val.setting.toLowerCase()}.txt`);
-  });
-}, 10000);
+var subscribedClients = 1;
+
+function getUpdates() {
+  console.log("now");
+  if (subscribedClients > 0) {
+    getCountryPreference().then(val => {
+      if (val)
+        return apiStrategy.makeRequest({ request: `score/${val.setting.toLowerCase()}.txt` });
+      // return fetch(`score/${val.setting.toLowerCase()}.txt`);
+      else
+        subscribedClients = 0;
+    });
+  } else {
+    // console.log("clearing interval");
+    console.log("no subscribed clients");
+    // clearInterval(interval);
+  }
+}
+
+var interval = setInterval(getUpdates, 10 * 1000);
+
+// interval();
 
 self.addEventListener('fetch', function(e) {
   console.log('[SW] Fetching url:', e.request.url);
@@ -76,9 +92,17 @@ self.addEventListener('fetch', function(e) {
 
     e.respondWith(
       getCountryPreference().then(val => {
-        return apiStrategy.makeRequest({ e, request: `score/${val.setting.toLowerCase()}.txt` });
+        if (val)
+          return apiStrategy.makeRequest({ e, request: `score/${val.setting.toLowerCase()}.txt` });
         // return fetch(`score/${val.setting.toLowerCase()}.txt`);
       })
     );
   }
+});
+
+self.addEventListener('message', function handler(event) {
+  console.log(event.data);
+  subscribedClients += 1;
+  console.log(`subscribedClients = ${subscribedClients}`);
+
 });
