@@ -108,7 +108,6 @@ function getUpdates() {
     });
   } else {
     console.log(`[SW] No subscribed clients, not checking for updates`);
-    // clearInterval(interval);
   }
 }
 var interval = setInterval(getUpdates, CHECK_FOR_UPDATES_INTERVAL_SECONDS * 1000);
@@ -120,8 +119,7 @@ self.addEventListener('message', function handler(event) {
   if (event.data.receipt)
     event.ports[0].postMessage({ received: true });
   console.log(`[SW] Message received, command: '${event.data.command}'`);
-  if (event.data.command === 'subscribe')// && !subscribedClients) {
+  if (event.data.command === 'subscribe')
     subscribedClients = true;
-    // interval = setInterval(getUpdates, CHECK_FOR_UPDATES_INTERVAL_SECONDS * 1000);
   // }
 });

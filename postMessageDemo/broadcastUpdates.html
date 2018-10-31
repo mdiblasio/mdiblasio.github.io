@@ -87,11 +87,11 @@
       return promise;
   }
 
+  // subscribe clients to SW to receive broadcast updates
   function subscribeClientToUpdates() {
     console.log(`[Client] Subscribing client to updates from SW...`);
 
     // if active SW and SW replies, expect to receive scores updates
-
     if (navigator.serviceWorker.controller && navigator.serviceWorker.controller.state === 'activated') {
       sendMsgToServiceWorker('subscribe', true).then(response => {
         console.log(`[Client] Subscribing client to updates from SW... SUCCESS`);
@@ -109,46 +109,22 @@
     navigator.serviceWorker.register('sw.js').then(reg => {
         console.log('[Client] Service Worker registration successful with scope: ', reg.scope);
 
+        // subscribe clients when SW is activated or resubscribe when new SW is installed 
         reg.addEventListener('updatefound', () => {
-
           // An updated service worker has appeared in reg.installing!
           newWorker = reg.installing;
-
           newWorker.addEventListener('statechange', () => {
-
             // Has service worker state changed?
-            switch (newWorker.state) {
-              case 'activated':
-                console.log("[Client] New SW installed!");
-                subscribeClientToUpdates();
-
-                break;
+            if (newWorker.state === 'activated') {
+              console.log("[Client] New SW installed!");
+              subscribeClientToUpdates();
             }
-
           });
         });
       })
       .catch(function(err) {
         console.log('[Client] Service Worker registration failed: ', err);
       });
-
-    // SW ready
-    // navigator.serviceWorker.ready.then(() => {
-    //   console.log("[Client] SW is ready");
-    //   subscribeClientToUpdates();
-    // });
-
-    // // new SW
-    // navigator.serviceWorker.addEventListener('controllerchange', () => {
-    //   console.log("[Client] SW controllerchange event");
-    //   // subscribeClientToUpdates();
-    //   // SW ready
-    //   navigator.serviceWorker.ready.then(() => {
-    //     console.log("[Client] SW is ready");
-    //     subscribeClientToUpdates();
-    //   });
-    // });
-
   }
   </script>
 
