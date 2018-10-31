@@ -86,7 +86,7 @@
   readDB('userPreferences', 'country')
     .then(val => {
       if (val) {
-        document.getElementById('countryPref').innerText = val.setting;
+        document.getElementById('countryPref').innerText = val.setting.toUpperCase();
       }
     });
 
