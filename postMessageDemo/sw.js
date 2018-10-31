@@ -95,7 +95,7 @@ async function broadcastMessage(_msg) {
   }
 }
 
-// initially no subscribed clients
+// initially no subscribed clientss
 var subscribedClients = false;
 // check for updates every X seconds
 const CHECK_FOR_UPDATES_INTERVAL_SECONDS = 10;

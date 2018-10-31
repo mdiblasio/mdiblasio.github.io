@@ -406,15 +406,17 @@ http://www.webpagetest.org/getkey.php" style="color: #96fff2; font-weight: bold;
       `logData    0
 navigate    https://www.google.com/search?q=${encodeURIComponent(searchTerm)}
 sleep   3
-exec    window.scrollBy(0, 600);
-sleep   1
-exec    window.scrollBy(0, 600);
-sleep   1
-exec    window.scrollBy(0, 600);
-sleep   1
-exec    window.scrollBy(0, 600);
-sleep   1
-exec    window.scrollBy(0, 600);
+exec    window.scrollBy(0, 400);
+sleep   2
+exec    window.scrollBy(0, 400);
+sleep   2
+exec    window.scrollBy(0, 400);
+sleep   2
+exec    window.scrollBy(0, 400);
+sleep   2
+exec    window.scrollBy(0, 400);
+sleep   2
+exec    window.scrollBy(0, 400);
 sleep   5
 logData 1
 execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
