@@ -1,5 +1,7 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.6.1/workbox-sw.js');
-importScripts('https://raw.githubusercontent.com/jakearchibald/idb/master/lib/idb.js');
+
+// https://github.com/jakearchibald/idb
+importScripts('idb.js');
 
 if (workbox) {
   console.log(`[SW] Yay! Workbox is loaded 🎉`);
