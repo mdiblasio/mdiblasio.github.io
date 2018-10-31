@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Sports Demo PWA</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="idb.js"></script>
+  <style>
+  body {
+    font-size: 16px;
+    margin: 20px;
+  }
+
+  label,
+  button {
+    margin-right: 10px;
+    font-size: 16px;
+  }
+
+  div {
+    font-size: 16px;
+    margin: 10px 0px;
+  }
+
+  #score {
+    width: 250px;
+    margin: 10px;
+    padding: 5px;
+    text-align: center;
+    background-color: lightgray;
+    border: .2px solid gray;
+    font-size: 16px;
+  }
+  </style>
+</head>
+
+<body>
+
+  <div id="preferenceChoice">
+    <label>Change country preference:</label>
+    <button onclick="setUserPreference('country','USA')">USA</button>
+    <button onclick="setUserPreference('country','EUR')">EUR</button>
+  </div>
+
+  <div id="preferences">
+    <label>Your country preference is:</label>
+    <span id="countryPref" />
+  </div>
+
+  <div>
+    <button id="fetchScore" onclick="fetchScore()">Fetch Score</button>
+    <input type="text" id="score" />
+  </div>
+
+
+  <script>
+  var dbPromise = idb.open('sportsDemoPWA', 1, function(upgradeDb) {
+    console.log(`Creating object store 'userPreferences'`);
+    if (!upgradeDb.objectStoreNames.contains('userPreferences')) {
+      upgradeDb.createObjectStore('userPreferences', { keyPath: 'preference' });
+    }
+  });
+
+  // read DB
+  function readDB(_table, _key) {
+    return dbPromise.then(function(db) {
+      return db.transaction(_table, 'readwrite')
+        .objectStore(_table)
+        .get(_key);
+    });
+  }
+
+  // write to DB
+  function writeDB(_table, _value) {
+    return dbPromise.then(function(db) {
+      return db.transaction(_table, 'readwrite')
+        .objectStore(_table)
+        .put(_value)
+        .complete;
+    })
+  }
+
+  // get user country preference from IndexedDB
+  readDB('userPreferences', 'country')
+    .then(val => {
+      if (val) {
+        document.getElementById('countryPref').innerText = val.setting;
+      }
+    });
+
+  // save user preference to IndexedDB
+  function setUserPreference(preference, setting) {
+    writeDB('userPreferences', {
+      preference: preference,
+      setting: setting
+    }).then(function() {
+      console.log(`[Client] Added item to the store os!`);
+      document.getElementById('countryPref').innerText = setting.toUpperCase();
+    });
+  }
+
+  // update widget 'last updated'
+  function fetchScore() {
+    fetch('score')
+      .then(res => res.text())
+      .then(score => {
+        document.getElementById('score').value = score;
+      });
+  }
+  </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        console.log('Service Worker registration successful with scope: ', reg.scope);
+      })
+      .catch(function(err) {
+        console.log('[Client] Service Worker registration failed: ', err);
+      });
+  }
+  </script>
+
+</body>
+
+</html>

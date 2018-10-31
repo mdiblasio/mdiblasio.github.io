@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Sports Demo PWA</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="idb.js"></script>
+  <style>
+  body {
+    font-size: 20px;
+    margin: 20px;
+  }
+
+
+  label {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  .widget {
+    margin: 20px 0px;
+    padding: 20px;
+    border: .2px solid lightgray;
+    max-width: 400px;
+  }
+  </style>
+</head>
+
+<body>
+
+  <h3>Widgets</h3>
+  <div id="widgets"></div>
+
+  <script>
+  // create widgets
+  function createWidgets(num) {
+    let widgets = document.getElementById('widgets');
+    for (let i = 1; i <= num; i++) {
+      let widget = document.createElement('div');
+      widget.id = `widget${i}`;
+      widget.classList = "widget";
+      widget.innerHTML = `<label>Last updated:    </label><span id="widget${i}-lastupdated"></span>`;
+      widgets.appendChild(widget);
+    }
+  }
+  createWidgets(10);
+
+  // SW message handler
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    console.log(`[Client] Message received, command: '${event.data.command}'`);
+    switch (event.data.command) {
+      case 'score-update':
+        // update widets with latest score
+        document.querySelectorAll('.widget').forEach(widget => {
+          widget.querySelector('span').innerText = event.data.timestamp;
+        });
+        // resubscribe clients after each update from SW
+        subscribeClientToUpdates();
+        break;
+    }
+  });
+
+  // send message to SW 
+  function sendMsgToServiceWorker(_command, _receipt = false) {
+    let promise = new Promise(function(resolve, reject) {
+      var msgChannel = new MessageChannel();
+
+      // Handler for recieving message reply from service worker
+      msgChannel.port1.onmessage = (event) => {
+        if (event.data.error)
+          reject();
+        else
+          resolve(event.data);
+      }
+
+      // reject if no reply received
+      setTimeout(() => { reject("fail") }, 1000);
+
+      navigator.serviceWorker.controller.postMessage({
+        command: _command,
+        receipt: _receipt
+      }, [msgChannel.port2]);
+    });
+    if (_receipt)
+      return promise;
+  }
+
+  function subscribeClientToUpdates() {
+    console.log(`[Client] Subscribing client to updates from SW...`);
+
+    // if active SW and SW replies, expect to receive scores updates
+
+    if (navigator.serviceWorker.controller && navigator.serviceWorker.controller.state === 'activated') {
+      sendMsgToServiceWorker('subscribe', true).then(response => {
+        console.log(`[Client] Subscribing client to updates from SW... SUCCESS`);
+      }).catch(e => {
+        console.log(`[Client] Subscribing client to updates from SW... FAIL (no response from SW)`);
+      });
+    } else {
+      console.log(`[Client] Subscribing client to updates from SW... FAIL (no active SW)`);
+    }
+  }
+  subscribeClientToUpdates();
+  </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        console.log('[Client] Service Worker registration successful with scope: ', reg.scope);
+
+        reg.addEventListener('updatefound', () => {
+
+          // An updated service worker has appeared in reg.installing!
+          newWorker = reg.installing;
+
+          newWorker.addEventListener('statechange', () => {
+
+            // Has service worker state changed?
+            switch (newWorker.state) {
+              case 'activated':
+                console.log("[Client] New SW installed!");
+                subscribeClientToUpdates();
+
+                break;
+            }
+
+          });
+        });
+      })
+      .catch(function(err) {
+        console.log('[Client] Service Worker registration failed: ', err);
+      });
+
+    // SW ready
+    // navigator.serviceWorker.ready.then(() => {
+    //   console.log("[Client] SW is ready");
+    //   subscribeClientToUpdates();
+    // });
+
+    // // new SW
+    // navigator.serviceWorker.addEventListener('controllerchange', () => {
+    //   console.log("[Client] SW controllerchange event");
+    //   // subscribeClientToUpdates();
+    //   // SW ready
+    //   navigator.serviceWorker.ready.then(() => {
+    //     console.log("[Client] SW is ready");
+    //     subscribeClientToUpdates();
+    //   });
+    // });
+
+  }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Sports Demo PWA</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="idb.js"></script>
+  <style>
+  body {
+    font-size: 20px;
+    margin: 20px;
+  }
+
+  .option {
+    display: block;
+  }
+
+  .section {
+    margin: 20px 0px;
+    /*border: .2px solid lightgray;*/
+  }
+
+  button {
+    width: 150px;
+    margin: 10px 0px;
+    padding: 5px;
+    font-size: 16px;
+    height: 35px;
+  }
+
+  #score {
+    width: 250px;
+    margin: 10px;
+    padding: 5px;
+    text-align: center;
+    font-size: 16px;
+    background-color: lightgray;
+    border: .2px solid gray;
+    height: 35px;
+  }
+
+  label {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  hr {
+    margin: 25px 0px;
+  }
+
+  #preferenceChoice,
+  #preferences {
+    /*display: none;*/
+  }
+
+  .widget {
+    margin: 20px 0px;
+    padding: 20px;
+    border: .2px solid lightgray;
+    max-width: 400px;
+  }
+  </style>
+</head>
+
+<body>
+
+  <div class="section">
+    <label>Client-side fallback enabled:</label>
+    <span id="clientFallback" />
+  </div>
+
+  <div class="section" id="preferenceChoice">
+    <h3>Change country preference:</h3>
+    <button class="option" onclick="setUserPreference('country','USA')">USA</button>
+    <button class="option" onclick="setUserPreference('country','EUR')">EUR</button>
+  </div>
+
+  <hr/>
+
+  <div class="section" id="preferences">
+    <label>Your country preference is:</label>
+    <span id="countryPref" />
+  </div>
+  <hr/>
+  <div class="section">
+    <button id="fetchScore" onclick="updateScore()">Fetch Score</button>
+    <input type="text" id="score" />
+  </div>
+  <hr/>
+
+  <h3>Widgets</h3>
+  <div id="widgets"></div>
+
+  <script>
+  var dbPromise = idb.open('sportsDemoPWA', 1, function(upgradeDb) {
+    console.log(`Creating object store 'userPreferences'`);
+    if (!upgradeDb.objectStoreNames.contains('userPreferences')) {
+      upgradeDb.createObjectStore('userPreferences', { keyPath: 'preference' });
+    }
+  });
+
+  function readDB(_table, _key) {
+    return dbPromise.then(function(db) {
+      return db.transaction(_table, 'readwrite')
+        .objectStore(_table)
+        .get(_key);
+    });
+  }
+
+  function writeDB(_table, _value) {
+    return dbPromise.then(function(db) {
+      return db.transaction(_table, 'readwrite')
+        .objectStore(_table)
+        .put(_value)
+        .complete;
+    })
+  }
+
+  // get user country preference from IndexedDB
+  function getCountryPreference() {
+    readDB('userPreferences', 'country')
+      .then(val => {
+        if (val) {
+          // document.getElementById('countryPref').innerText = val.setting;
+          updatePreferenceElement(val.setting);
+        }
+        // else {
+        // document.getElementById('clientFallback').innerText = !subscribedToUpdates;
+        // }
+      });
+  }
+  getCountryPreference();
+
+  // create widgets
+  function createWidgets(num) {
+    let widgets = document.getElementById('widgets');
+    for (let i = 1; i <= num; i++) {
+      let widget = document.createElement('div');
+      widget.id = `widget${i}`;
+      widget.classList = "widget";
+      widget.innerHTML = `<label>Last updated:    </label><span id="widget${i}-lastupdated"></span>`;
+      widgets.appendChild(widget);
+    }
+  }
+  createWidgets(10);
+
+  // save user preference to IndexedDB
+  function setUserPreference(preference, setting) {
+    writeDB('userPreferences', {
+      preference: preference,
+      setting: setting
+    }).then(function() {
+      console.log(`[Client] Added item to the store os!`);
+      updatePreferenceElement(setting);
+    });
+  }
+
+  function updatePreferenceElement(setting) {
+    document.getElementById('countryPref').innerText = setting;
+    // navigator.serviceWorker.controller.postMessage({ command: 'subscribeClient' });
+    subscribeClientToUpdates();
+  }
+
+  // update widget 'last updated'
+  function updateScore() {
+    console.log(`[Client] navigator.serviceWorker.controller.state = ${navigator.serviceWorker.controller.state}`);
+    if (navigator.serviceWorker.controller.state === 'activated') {
+      fetch('score')
+        .then(res => res.text())
+        .then(score => {
+          document.getElementById('score').value = score;
+        });
+    } else {
+      console.log(`[Client] Service worker is not activated`);
+    }
+  }
+
+  var lastUpdated = (new Date()).getTime();
+
+  function updateScores(_lastUpdated) {
+    // console.log("updateScores");
+    lastUpdated = (new Date()).getTime();
+    document.querySelectorAll('.widget').forEach(widget => {
+      widget.querySelector('span').innerText = _lastUpdated;
+    });
+    subscribeClientToUpdates();
+  }
+
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    console.log(`[Client] Message received, command: '${event.data.command}'`);
+    switch (event.data.command) {
+      case 'score-update':
+        updateScores(event.data.timestamp);
+        break;
+    }
+  });
+
+  const MINIMUM_UPDATE_INTERVAL_SECONDS = 30; // if no updates received, fallback
+  let subscribedToUpdates = false;
+
+  function sendMsgToServiceWorker(_command, _receipt = false) {
+    let promise = new Promise(function(resolve, reject) {
+      // Create a Message Channel
+      var msgChannel = new MessageChannel();
+
+      // Handler for recieving message reply from service worker
+      msgChannel.port1.onmessage = (event) => { resolve(event.data); }
+
+      setTimeout(() => { reject("fail") }, 500);
+      navigator.serviceWorker.controller.postMessage({
+        command: _command,
+        receipt: _receipt
+      }, [msgChannel.port2]);
+    });
+    if (_receipt)
+      return promise;
+  }
+
+  function subscribeClientToUpdates() {
+    console.log(`[Client] Subscribing client to updates from SW...`);
+    if (navigator.serviceWorker.controller && navigator.serviceWorker.controller.state === 'activated') {
+      // console.log(`[Client] Subscribing client to updates`);
+      // subscribedToUpdates = false;
+      sendMsgToServiceWorker('subscribe', true).then(response => {
+        // console.log(`[Client] Receipt received`);
+        console.log(`[Client] Subscribing client to updates from SW... SUCCESS`);
+        subscribedToUpdates = true;
+      }).catch(e => {
+        console.log(`[Client] Subscribing client to updates from SW... FAIL (no response from SW)`);
+        subscribedToUpdates = false;
+      });
+    } else {
+      console.log(`[Client] Subscribing client to updates from SW... FAIL (no active SW)`);
+      subscribedToUpdates = false;
+    }
+  }
+
+  function checkIsUpdating() {
+    console.log(`[Client] checkIsUpdating()...`);
+    console.log(`[Client] subscribedToUpdates = ${subscribedToUpdates}`);
+    const now = (new Date()).getTime();
+    if (now - lastUpdated > MINIMUM_UPDATE_INTERVAL_SECONDS * 1000) {
+      console.log(`[Client] Scores haven't been updated in at least ${MINIMUM_UPDATE_INTERVAL_SECONDS} seconds, fallback to client update polling!`);
+      // document.getElementById('clientFallback').innerText = !subscribedToUpdates;
+      // document.querySelectorAll('.widget').forEach(widget => {
+      //   widget.style.backgroundColor = 'red';
+      // });
+    } else {
+      setTimeout(checkIsUpdating, MINIMUM_UPDATE_INTERVAL_SECONDS * 1000);
+      console.log(`[Client] Scores are updating!`);
+    }
+  }
+  setTimeout(checkIsUpdating, MINIMUM_UPDATE_INTERVAL_SECONDS * 1000);
+  </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        reg.installing; // the installing worker, or undefined
+        reg.waiting; // the waiting worker, or undefined
+        reg.active; // the active worker, or undefined
+
+        reg.addEventListener('statechange', (e) => {
+          console.log("XXXX");
+        });
+
+        reg.addEventListener('updatefound', () => {
+          // console.log('updatefound');
+          // A wild service worker has appeared in reg.installing!
+          const newWorker = reg.installing;
+
+          // newWorker.state
+          // console.log(`newWorker.state = ${newWorker.state}`);
+          // // "installing" - the install event has fired, but not yet complete
+          // // "installed"  - install complete
+          // // "activating" - the activate event has fired, but not yet complete
+          // // "activated"  - fully active
+          // // "redundant"  - discarded. Either failed install, or it's been
+          // //                replaced by a newer version
+
+          newWorker.addEventListener('statechange', (e) => {
+            // newWorker.state has changed
+            // console.log('statechange');
+            // console.log(e);
+            // console.log(`newWorker.state = ${newWorker.state}`);
+            if (newWorker.state === 'activated') {
+              console.log("[Client] SW now active");
+              // subscribeClientToUpdates();
+            }
+          });
+        });
+      })
+      .catch(function(err) {
+        console.log('[Client] Service Worker registration failed: ', err);
+      });
+  }
+
+  // if ('serviceWorker' in navigator) {
+  //   // setTimeout(() => {
+  //   navigator.serviceWorker.ready.then(function(registration) {
+  //     console.log('SW ready');
+  //     registration.onupdatefound = (event) => {
+  //       console.log('onupdatefound');
+  //     };
+  //   });
+  //   navigator.serviceWorker.register('sw.js')
+  //     .then(function(registration) {
+  //       console.log('Service Worker registration successful with scope: ', registration.scope);
+  //       // console.log(registration);
+  //       // registration.onupdatefound = (event) => {
+  //       //   console.log('onupdatefound');
+  //       //   // console.log(event);
+  //       //   var installingWorker = registration.installing;
+  //       //   installingWorker.onstatechange = (event) => {
+  //       //     console.log('installingWorker.onstatechange');
+  //       //     console.log(event);
+  //       //   }
+  //       //   // navigator.serviceWorker.controller.postMessage({ command: 'subscribedClient' });
+  //       //   // if (event.state === 'waiting') alertUser(event.registration);
+  //       // };
+  //       // navigator.serviceWorker.controller.postMessage({ command: 'subscribedClient' });
+
+  //     })
+  //     .catch(function(err) {
+  //       console.log('Service Worker registration failed: ', err);
+  //     });
+  //   // }, 5000);
+  // }
+  </script>
+
+</body>
+
+</html>

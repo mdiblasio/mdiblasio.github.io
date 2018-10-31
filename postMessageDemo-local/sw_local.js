@@ -1,4 +1,9 @@
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.6.1/workbox-sw.js');
+// importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.6.1/workbox-sw.js');
+importScripts('/third_party/workbox/workbox-v3.6.3/workbox-sw.js');
+
+workbox.setConfig({
+  modulePathPrefix: '/third_party/workbox/workbox-v3.6.3/'
+});
 
 importScripts('idb.js');
 
@@ -47,6 +52,18 @@ async function getCountryPreference() {
   return readDB('userPreferences', 'country');
 }
 
+// rewrite URL based on user country preference
+self.addEventListener('fetch', function(e) {
+  console.log('[SW] Fetching url:', e.request.url);
+  if (/score/i.test(e.request.url)) {
+    e.respondWith(
+      getCountryPreference().then(val => {
+        val = val ? val.setting : DEFAULT_COUNTRY_PREFERENCE;
+        return apiStrategy.makeRequest({ e, request: `score/${val}.txt` });
+      })
+    );
+  }
+});
 
 // plugin to broadcast post messages when cache has been updated
 const postMessagePlugin = {
@@ -64,27 +81,6 @@ const postMessagePlugin = {
   },
 };
 
-const apiStrategy = workbox.strategies.staleWhileRevalidate({
-  cacheName: 'score',
-  plugins: [postMessagePlugin],
-});
-
-
-// rewrite URL based on user country preference
-self.addEventListener('fetch', function(e) {
-  console.log('[SW] Fetching url:', e.request.url);
-  if (/score/i.test(e.request.url)) {
-    e.respondWith(
-      getCountryPreference().then(val => {
-        val = val ? val.setting : DEFAULT_COUNTRY_PREFERENCE;
-        // use api strategy to make request
-        return apiStrategy.makeRequest({ e, request: `score/${val}.txt` });
-      })
-    );
-  }
-});
-
-
 async function broadcastMessage(_msg) {
   const clients = await self.clients.matchAll();
   for (const client of clients) {
@@ -92,6 +88,11 @@ async function broadcastMessage(_msg) {
     client.postMessage(_msg);
   }
 }
+
+const apiStrategy = workbox.strategies.staleWhileRevalidate({
+  cacheName: 'score',
+  plugins: [postMessagePlugin],
+});
 
 // initially no subscribed clients
 var subscribedClients = false;
