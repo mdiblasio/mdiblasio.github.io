@@ -77,7 +77,7 @@
     return dbPromise.then(function(db) {
       return db.transaction(_table, 'readwrite')
         .objectStore(_table)
-        .put(_value)
+        .put(_value.toLowerCase())
         .complete;
     })
   }
