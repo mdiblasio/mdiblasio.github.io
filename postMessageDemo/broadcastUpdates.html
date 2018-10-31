@@ -97,9 +97,11 @@
         console.log(`[Client] Subscribing client to updates from SW... SUCCESS`);
       }).catch(e => {
         console.log(`[Client] Subscribing client to updates from SW... FAIL (no response from SW)`);
+        console.log(`[Client] Fallback to client polling!`);
       });
     } else {
       console.log(`[Client] Subscribing client to updates from SW... FAIL (no active SW)`);
+      console.log(`[Client] Fallback to client polling!`);
     }
   }
   subscribeClientToUpdates();
