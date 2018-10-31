@@ -59,6 +59,7 @@ const postMessagePlugin = {
     const minute = now.getMinutes() < 10 ? now.getMinutes() * 10 : now.getMinutes();
     const second = now.getSeconds() < 10 ? now.getSeconds() * 10 : now.getSeconds();
     const time = `${hour}:${minute}.${second}`;
+    // clients must resubscribe after each update is sent
     subscribedClients = false;
     broadcastMessage({ command: "score-update", timestamp: time });
     // }sss
