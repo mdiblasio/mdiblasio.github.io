@@ -27,6 +27,13 @@
       navigator.serviceWorker.register('sw.js').then(reg => {
           console.log('[Client] Service Worker registration successful with scope: ', reg.scope);
 
+
+          if (reg.active && reg.active.state === 'activated') {
+            console.log(`reg.active.state = ${reg.active.state}`);
+            fetch('assets/dummy1.txt');
+            fetch('assets/dummy2.txt');
+          }
+
           // subscribe clients when SW is activated or resubscribe when new SW is installed 
           reg.addEventListener('updatefound', () => {
             // An updated service worker has appeared in reg.installing!
@@ -44,13 +51,24 @@
         .catch(function(err) {
           console.log('[Client] Service Worker registration failed: ', err);
         });
+
+      // navigator.serviceWorker.ready.then(function(reg) {
+      //   console.log('navigator.serviceWorker.ready');
+      //   fetch('assets/dummy3.txt');
+      //   if (reg.waiting) console.log(`reg.waiting = ${reg.waiting}`);
+      //   reg.addEventListener('statechange', function(e) {
+      //     if (e.target.state === 'waiting') console.log(`reg.waiting = ${reg.waiting}`);
+      //   });
+      // });
+
+      // var script = document.createElement('script');
+      // script.setAttribute('src', 'assets/6.js');
+      // script.async = true;
+      // document.head.appendChild(script);
     });
-
-
 
   }
   </script>
-  <script src="assets/6.js"></script>
 </body>
 
 </html>
