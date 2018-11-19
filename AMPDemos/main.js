@@ -90,30 +90,30 @@ function runWPT(url, connection, name, api_key) {
 
 // TODO
 // example: https://m.tokopedia.com/mitra-multitechn/traffic-cone-full-orange-75-cm-rubber-double-scotlight
-function amp2pwaWPTScript(searchTerm, ampUrl, pwaUrl, connection, name, api_key) {
-  let script =
-    `logData    0
-navigate    https://www.google.com/search?q=${encodeURIComponent(searchTerm)}
-sleep   3
-exec    window.scrollBy(0, 400);
-sleep   2
-exec    window.scrollBy(0, 400);
-sleep   2
-exec    window.scrollBy(0, 400);
-sleep   2
-exec    window.scrollBy(0, 400);
-sleep   2
-exec    window.scrollBy(0, 400);
-sleep   2
-exec    window.scrollBy(0, 400);
-sleep   5
-logData 0
-sleep   10
-logData    1
-navigate    ${pwaUrl}
-`;
+// function amp2pwaWPTScript(searchTerm, ampUrl, pwaUrl, connection, name, api_key) {
+//   let script =
+//     `logData    0
+// navigate    https://www.google.com/search?q=${encodeURIComponent(searchTerm)}
+// sleep   3
+// exec    window.scrollBy(0, 400);
+// sleep   2
+// exec    window.scrollBy(0, 400);
+// sleep   2
+// exec    window.scrollBy(0, 400);
+// sleep   2
+// exec    window.scrollBy(0, 400);
+// sleep   2
+// exec    window.scrollBy(0, 400);
+// sleep   2
+// exec    window.scrollBy(0, 400);
+// sleep   5
+// logData 0
+// sleep   10
+// logData    1
+// navigate    ${pwaUrl}
+// `;
 
-}
+// }
 
 // run scripted WPT
 function runScriptedWPT(searchTerm, ampUrl, connection, name, api_key) {
@@ -178,25 +178,25 @@ wptApiKeyInput.addEventListener('change', (e) => {
 });
 
 // console.log('clicked....');
-let amp2pwaCheckbox = document.getElementById('amp2pwaCheckbox');
-let pwaURLrow = document.getElementById('pwaURLrow');
+// let amp2pwaCheckbox = document.getElementById('amp2pwaCheckbox');
+// let pwaURLrow = document.getElementById('pwaURLrow');
 
-amp2pwaCheckbox.addEventListener('click', () => {
-  console.log('clicked....');
-  if (amp2pwaCheckbox.checked) {
-    pwaURLrow.style.display = 'flex';
-    document.querySelectorAll('.checkbox').forEach(checkbox => {
-      if (checkbox.id != 'amp2pwaCheckbox')
-        checkbox.checked = false;
-    });
-  } else {
-    pwaURLrow.style.display = 'none';
-    document.querySelectorAll('.checkbox').forEach(checkbox => {
-      if (checkbox.id != 'amp2pwaCheckbox')
-        checkbox.checked = true;
-    });
-  }
-});
+// amp2pwaCheckbox.addEventListener('click', () => {
+//   console.log('clicked....');
+//   if (amp2pwaCheckbox.checked) {
+//     pwaURLrow.style.display = 'flex';
+//     document.querySelectorAll('.checkbox').forEach(checkbox => {
+//       if (checkbox.id != 'amp2pwaCheckbox')
+//         checkbox.checked = false;
+//     });
+//   } else {
+//     pwaURLrow.style.display = 'none';
+//     document.querySelectorAll('.checkbox').forEach(checkbox => {
+//       if (checkbox.id != 'amp2pwaCheckbox')
+//         checkbox.checked = true;
+//     });
+//   }
+// });
 
 var form = document.getElementById('inputUrls');
 form.addEventListener('submit', (e) => {
