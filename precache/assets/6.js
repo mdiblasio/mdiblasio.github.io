@@ -818,5 +818,5 @@
 
     */
 
-fetch('assets/dummy5.txt');
-fetch('assets/dummy6.txt');
+fetch('assets/dummy6-a.txt');
+fetch('assets/dummy6-b.txt');
