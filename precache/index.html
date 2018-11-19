@@ -18,15 +18,31 @@
 
 
   <script>
-  // Check that service workers are registered
   if ('serviceWorker' in navigator) {
-    // Use the window load event to keep the page load performant
+
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').then(() => {
-        fetch('assets/dummy1.txt');
-        fetch('assets/dummy2.txt');
-      })
+      navigator.serviceWorker.register('sw.js').then(reg => {
+          console.log('[Client] Service Worker registration successful with scope: ', reg.scope);
+
+          // subscribe clients when SW is activated or resubscribe when new SW is installed 
+          reg.addEventListener('updatefound', () => {
+            // An updated service worker has appeared in reg.installing!
+            newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              // Has service worker state changed?
+              if (newWorker.state === 'activated') {
+                console.log("[Client] New SW installed!");
+                fetch('assets/dummy1.txt');
+                fetch('assets/dummy2.txt');
+              }
+            });
+          });
+        })
+        .catch(function(err) {
+          console.log('[Client] Service Worker registration failed: ', err);
+        });
     });
+
   }
   </script>
 </body>
