@@ -62,7 +62,12 @@
     }
   });
 
-  // send message to SW 
+  /**
+  Send message to SW via postMessage(..)
+  @param {string} _command Message command type
+  @param {boolean} _receipt Request SW return message receipt
+  @return {Promise} Promise that resolves if receipt returned, rejects otherwise
+  */
   function sendMsgToServiceWorker(_command, _receipt = false) {
     let promise = new Promise(function(resolve, reject) {
       var msgChannel = new MessageChannel();
