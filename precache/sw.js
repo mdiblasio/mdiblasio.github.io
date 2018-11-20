@@ -11,10 +11,8 @@ if (workbox) {
   console.log(`Boo! Workbox didn't load 😬`);
 }
 
-workbox.precaching.precacheAndRoute([{
-    url: 'index.html',
-    revision: '2'
-  },
+workbox.precaching.precacheAndRoute([
+  'assets/offline.html',
   'assets/1.js',
   'assets/2.js',
   'assets/3.js',
@@ -30,4 +28,29 @@ workbox.precaching.precacheAndRoute([{
 workbox.routing.registerRoute(
   /dummy/,
   workbox.strategies.cacheFirst()
+);
+
+workbox.routing.registerRoute(
+  /runtime\d?\/networkFirst/,
+  workbox.strategies.networkFirst()
+);
+
+workbox.routing.registerRoute(
+  /runtime\d?\/cacheFirst/,
+  workbox.strategies.cacheFirst()
+);
+
+workbox.routing.registerRoute(
+  /runtime\d?\/networkOnly/,
+  workbox.strategies.networkOnly()
+);
+
+workbox.routing.registerRoute(
+  /runtime\d?\/cacheOnly/,
+  workbox.strategies.cacheOnly()
+);
+
+workbox.routing.registerRoute(
+  /runtime\d?\/staleWhileRevalidate/,
+  workbox.strategies.staleWhileRevalidate()
 );

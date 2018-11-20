@@ -27,11 +27,16 @@
       navigator.serviceWorker.register('sw.js').then(reg => {
           console.log('[Client] Service Worker registration successful with scope: ', reg.scope);
 
-
           if (reg.active && reg.active.state === 'activated') {
             console.log(`reg.active.state = ${reg.active.state}`);
             fetch('assets/dummy1.txt');
             fetch('assets/dummy2.txt');
+
+            fetch('runtime2/cacheFirst.txt');
+            fetch('runtime2/networkFirst.txt');
+            fetch('runtime2/networkOnly.txt');
+            fetch('runtime2/staleWhileRevalidate.txt');
+            fetch('runtime2/cacheOnly.txt');
           }
 
           // subscribe clients when SW is activated or resubscribe when new SW is installed 
@@ -44,6 +49,12 @@
                 console.log("[Client] New SW installed!");
                 fetch('assets/dummy1.txt');
                 fetch('assets/dummy2.txt');
+
+                fetch('runtime2/cacheFirst.txt');
+                fetch('runtime2/networkFirst.txt');
+                fetch('runtime2/networkOnly.txt');
+                fetch('runtime2/staleWhileRevalidate.txt');
+                fetch('runtime2/cacheOnly.txt');
               }
             });
           });
@@ -68,6 +79,12 @@
     });
 
   }
+
+  fetch('runtime/cacheFirst.txt');
+  fetch('runtime/networkFirst.txt');
+  fetch('runtime/networkOnly.txt');
+  fetch('runtime/staleWhileRevalidate.txt');
+  fetch('runtime/cacheOnly.txt');
   </script>
 </body>
 
