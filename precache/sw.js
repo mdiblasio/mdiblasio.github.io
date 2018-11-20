@@ -11,10 +11,11 @@ if (workbox) {
   console.log(`Boo! Workbox didn't load 😬`);
 }
 
-workbox.precaching.precacheAndRoute([{
-    url: 'index.html',
-    revision: '3'
-  },
+workbox.precaching.precacheAndRoute([
+  // {
+  //   url: 'index.html',
+  //   revision: '3'
+  // },
   'assets/offline.html',
   'assets/1.js',
   'assets/2.js',
@@ -27,6 +28,13 @@ workbox.precaching.precacheAndRoute([{
   'assets/4.css',
   'assets/5.css',
 ]);
+
+const htmlHandler = workbox.strategies.networkOnly();
+// A NavigationRoute matches navigation requests in the browser, i.e. requests for HTML.
+const navigationRoute = new workbox.routing.NavigationRoute(({ event }) => {
+  return htmlHandler.handle({ event }).catch(() => caches.match('assets/offline.html'));
+});
+workbox.routing.registerRoute(navigationRoute);
 
 workbox.routing.registerRoute(
   /dummy/,
