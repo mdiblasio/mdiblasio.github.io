@@ -11,7 +11,10 @@ if (workbox) {
   console.log(`Boo! Workbox didn't load 😬`);
 }
 
-workbox.precaching.precacheAndRoute([
+workbox.precaching.precacheAndRoute([{
+    url: 'index.html',
+    revision: '3'
+  },
   'assets/offline.html',
   'assets/1.js',
   'assets/2.js',
