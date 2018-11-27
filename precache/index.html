@@ -16,11 +16,11 @@
 
 
 <body>
-  <h1>Precache Test v7</h1>
+  <h1>Precache Test v8</h1>
 
   <script>
-  fetch('assets/dummy3.txt');
-  fetch('assets/dummy4.txt');
+  // fetch('assets/dummy3.txt');
+  // fetch('assets/dummy4.txt');
   if ('serviceWorker' in navigator) {
 
     window.addEventListener('load', () => {
@@ -29,8 +29,8 @@
 
           if (reg.active && reg.active.state === 'activated') {
             console.log(`reg.active.state = ${reg.active.state}`);
-            fetch('assets/dummy1.txt');
-            fetch('assets/dummy2.txt');
+            // fetch('assets/dummy1.txt');
+            // fetch('assets/dummy2.txt');
 
             fetch('runtime2/cacheFirst.txt');
             fetch('runtime2/networkFirst.txt');
@@ -47,8 +47,8 @@
               // Has service worker state changed?
               if (newWorker.state === 'activated') {
                 console.log("[Client] New SW installed!");
-                fetch('assets/dummy1.txt');
-                fetch('assets/dummy2.txt');
+                // fetch('assets/dummy1.txt');
+                // fetch('assets/dummy2.txt');
 
                 fetch('runtime2/cacheFirst.txt');
                 fetch('runtime2/networkFirst.txt');
