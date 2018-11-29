@@ -8,9 +8,13 @@ img {
   display: block;
 }
 
+h1 {
+	margin-bottom: 100vh
+}
+
 .imageContainer {
-  margin-bottom: 300px;
-  min-height: 500px;
+  margin-bottom: 100px;
+  /*min-height: 500px;*/
   border: .2px solid lightgray;
   padding: 10px;
 }

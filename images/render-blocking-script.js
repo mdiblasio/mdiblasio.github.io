@@ -8,7 +8,7 @@ function block(ms) {
 	}
 }
 
-block(1000);
+block(500);
 
 /*
 Overview

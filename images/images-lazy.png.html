@@ -9,14 +9,14 @@
   <link rel="stylesheet"
         href="main.css">
   <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-  <script src="render-blocking-script.js"></script>
+
 </head>
 
 <body>
   <h1>Images (Lazy-loaded)</h1>
   <div class="imageContainer">
     <h3>Image 1</h3>
-    <img src="img3.png">
+    <img src="img1.png">
   </div>
   <div class="imageContainer">
     <h3>Image 2</h3>
@@ -26,10 +26,10 @@
   <div class="imageContainer">
     <h3>Image 3</h3>
     <img class="lazy"
-         data-src="img1.png">
+         data-src="img3.png">
   </div>
 
-
+<script src="render-blocking-script.js"></script>
   <script>
   var io = new IntersectionObserver(
     (entries, observer) => {
