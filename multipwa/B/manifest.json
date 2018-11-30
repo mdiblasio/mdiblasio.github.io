@@ -1,0 +1,20 @@
+
+		{
+		  "name": "B",
+		  "short_name": "B",
+		  "icons": [{
+		      "src": "/multipwa/imgs/B-192.png",
+		      "sizes": "192x192",
+		      "type": "image/png"
+		    },{
+		      "src": "/multipwa/imgs/B-512.png",
+		      "sizes": "512x512",
+		      "type": "image/png"
+		    }],
+		  "start_url": "multipwa/B/index.html",
+		  "scope": "/",
+		  "background_color": "#fff",
+		  "display": "standalone",
+		  "theme_color": "#fff"
+		}
+	
