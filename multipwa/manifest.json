@@ -1,20 +1,20 @@
-{
-  "name": "Home",
-  "short_name": "Home",
-  "icons": [
-  {
-    "src": "/multipwa/imgs/home-192.png",
-    "sizes": "192x192",
-    "type": "image/png"
-  },
-  {
-    "src": "/multipwa/imgs/home-512.png",
-    "sizes": "512x512",
-    "type": "image/png"
-  }],
-  "start_url": "/multipwa/index.html",
-  "scope": "/",
-  "background_color": "#fff",
-  "display": "standalone",
-  "theme_color": "#fff"
-}
+
+		{
+		  "name": "Home",
+		  "short_name": "Home",
+		  "icons": [{
+		      "src": "/multipwa/imgs/home-192.png",
+		      "sizes": "192x192",
+		      "type": "image/png"
+		    },{
+		      "src": "/multipwa/imgs/home-512.png",
+		      "sizes": "512x512",
+		      "type": "image/png"
+		    }],
+		  "start_url": "/multipwa/index.html",
+		  "scope": "/",
+		  "background_color": "#fff",
+		  "display": "standalone",
+		  "theme_color": "#fff"
+		}
+	

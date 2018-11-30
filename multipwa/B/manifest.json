@@ -11,7 +11,7 @@
 		      "sizes": "512x512",
 		      "type": "image/png"
 		    }],
-		  "start_url": "multipwa/B/index.html",
+		  "start_url": "/multipwa/B/index.html",
 		  "scope": "/",
 		  "background_color": "#fff",
 		  "display": "standalone",
