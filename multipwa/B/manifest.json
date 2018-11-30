@@ -12,7 +12,6 @@
 		      "type": "image/png"
 		    }],
 		  "start_url": "/multipwa/B/index.html",
-		  "scope": "/",
 		  "background_color": "#fff",
 		  "display": "standalone",
 		  "theme_color": "#fff"
