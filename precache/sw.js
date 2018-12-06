@@ -35,12 +35,12 @@ importScripts('prod.js');
 //   'assets/5.css',
 // ]);
 
-const htmlHandler = workbox.strategies.networkOnly();
-// A NavigationRoute matches navigation requests in the browser, i.e. requests for HTML.
-const navigationRoute = new workbox.routing.NavigationRoute(({ event }) => {
-  return htmlHandler.handle({ event }).catch(() => caches.match('assets/offline.html'));
-});
-workbox.routing.registerRoute(navigationRoute);
+// const htmlHandler = workbox.strategies.networkOnly();
+// // A NavigationRoute matches navigation requests in the browser, i.e. requests for HTML.
+// const navigationRoute = new workbox.routing.NavigationRoute(({ event }) => {
+//   return htmlHandler.handle({ event }).catch(() => caches.match('assets/offline.html'));
+// });
+// workbox.routing.registerRoute(navigationRoute);
 
 workbox.routing.registerRoute(
   /dummy/,
