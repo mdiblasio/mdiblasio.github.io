@@ -6,24 +6,12 @@
   <meta name="viewport"
         content="width=device-width">
   <title>Test Precache</title>
-  <link rel="stylesheet"
-        href="assets/1.css" />
-  <link rel="stylesheet"
-        href="assets/2.css" />
-  <script src="assets/1.js"></script>
-  <script src="assets/2.js"></script>
-</head>
-
-
-<body>
-  <h1>Precache Test v8</h1>
-
   <script>
   // fetch('assets/dummy3.txt');
   // fetch('assets/dummy4.txt');
   if ('serviceWorker' in navigator) {
 
-    window.addEventListener('load', () => {
+    // window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').then(reg => {
           console.log('[Client] Service Worker registration successful with scope: ', reg.scope);
 
@@ -76,7 +64,7 @@
       // script.setAttribute('src', 'assets/6.js');
       // script.async = true;
       // document.head.appendChild(script);
-    });
+    // });
 
   }
 
@@ -86,6 +74,19 @@
   fetch('runtime/staleWhileRevalidate.txt');
   fetch('runtime/cacheOnly.txt');
   </script>
+  <link rel="stylesheet"
+        href="assets/1.css" />
+  <link rel="stylesheet"
+        href="assets/2.css" />
+  <script src="assets/1.js"></script>
+  <script src="assets/2.js"></script>
+</head>
+
+
+<body>
+  <h1>Precache Test v8</h1>
+
+  
 </body>
 
 </html>
