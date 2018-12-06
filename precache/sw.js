@@ -6,6 +6,9 @@ workbox.clientsClaim();
 
 workbox.setConfig({ debug: true });
 
+// Enable navigation preload.
+workbox.navigationPreload.enable();
+
 if (workbox) {
   console.log(`Yay! Workbox is loaded 🎉`);
 } else {
