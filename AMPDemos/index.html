@@ -519,6 +519,7 @@ execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
     let connection = (formData.get('connectionType') === "3G") ? "3GFast" : formData.get('connectionType');
     let device = formData.get('device');
     let wptApiKey = formData.get('wptApiKey');
+    let location = formData.get('location');
 
     let testInfo = {
       canonical: { url: AMPUrlsJson.ampUrls[0].originalUrl, label: 'Canonical', run: false },
