@@ -237,6 +237,17 @@ http://www.webpagetest.org/getkey.php" style="color: #96fff2; font-weight: bold;
       </div>
     </div> -->
 
+    <!-- Hardcode 2 locations in case WPT server list cannot be reached -->
+    <div class="row">
+      <label class="label">Location</label>
+      <div class="entry">
+        <select name="location" id="location-dropdown">
+          <option value="Dulles" selected>Dulles</option>
+          <option value="ec2-ap-southeast-2">Sydney</option>
+        </select>
+      </div>
+    </div>
+
     <div class="row">
       <label class="label">Videos</label>
       <div class="entry">
@@ -310,6 +321,43 @@ http://www.webpagetest.org/getkey.php" style="color: #96fff2; font-weight: bold;
   </div>
 
   <script>
+
+  // fetch list of server location from WPT and populate location dropdown menu
+  function fetchAndPopulateServerLocations() {
+
+  let dropdown = document.getElementById('location-dropdown');
+  dropdown.length = 0;
+  let defaultOption = document.createElement('option');
+  defaultOption.text = 'Choose Server Location';
+  dropdown.add(defaultOption);
+  dropdown.selectedIndex = 0;
+  url = 'https://www.webpagetest.org/getLocations.php?f=json&k=A';
+  const request = new XMLHttpRequest();
+  request.open('GET', url, true);
+  request.onload = function () {
+    if (request.status === 200) {
+      const data = JSON.parse(request.responseText).data;
+      const keys = Object.keys(data);
+      let option;
+      for (let i = 0; i < keys.length; i++) {
+        option = document.createElement('option');
+        option.text = data[keys[i]].Label;
+        option.value = data[keys[i]].location;
+        dropdown.add(option);
+      }
+    } else {
+      // Reached the server, but it returned an error. Dulles & Sydney will be shown by default.
+      console.log("Error fetching WPT server locations");
+    }
+  }
+  request.onerror = function () {
+    console.error('An error occurred fetching the JSON from ' + url);
+  };
+  request.send();
+
+  }
+  fetchAndPopulateServerLocations();  
+  
   var RUNS = 1;
   var AMP_BATCH_URL = 'https://acceleratedmobilepageurl.googleapis.com/v1/ampUrls:batchGet';
   var AMP_BATCH_API_KEY = 'AIzaSyDteMhzKv7HPdYx2zV4nyiQ3bbCdDoTMbM';
@@ -389,8 +437,8 @@ http://www.webpagetest.org/getkey.php" style="color: #96fff2; font-weight: bold;
   });
 
   // run WPT
-  function runWPT(url, connection, name, api_key) {
-    return fetch(`https://www.webpagetest.org/runtest.php?k=${api_key}&url=${encodeURIComponent(url)}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}`, {
+  function runWPT(url, connection, location, name, api_key) {
+    return fetch(`https://www.webpagetest.org/runtest.php?k=${api_key}&url=${encodeURIComponent(url)}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=${location}%3AChrome.${connection}`, {
       'method': 'GET',
     }).then(response => response.text()).then(json => {
       return {
@@ -401,7 +449,7 @@ http://www.webpagetest.org/getkey.php" style="color: #96fff2; font-weight: bold;
   }
 
   // run scripted WPT
-  function runScriptedWPT(searchTerm, ampUrl, connection, name, api_key) {
+  function runScriptedWPT(searchTerm, ampUrl, connection, location, name, api_key) {
     let script =
       `logData    0
 navigate    https://www.google.com/search?q=${encodeURIComponent(searchTerm)}
@@ -422,7 +470,7 @@ logData 1
 execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
     document.getElementById('collapse-script').style.display = 'block';
     document.getElementById('script').innerText = script;
-    return fetch(`https://www.webpagetest.org/runtest.php?k=${api_key}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=Dulles%3AChrome.${connection}&script=${encodeURIComponent(script)}`).then(response => response.text()).then(json => {
+    return fetch(`https://www.webpagetest.org/runtest.php?k=${api_key}&f=json&runs=${RUNS}&fvonly=1&video=1&mobile=1&location=${location}%3AChrome.${connection}&script=${encodeURIComponent(script)}`).then(response => response.text()).then(json => {
       return {
         name: name,
         id: JSON.parse(json).data.testId
@@ -471,6 +519,7 @@ execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
     let connection = (formData.get('connectionType') === "3G") ? "3GFast" : formData.get('connectionType');
     let device = formData.get('device');
     let wptApiKey = formData.get('wptApiKey');
+    let location = formData.get('location');
 
     let testInfo = {
       canonical: { url: AMPUrlsJson.ampUrls[0].originalUrl, label: 'Canonical', run: false },
@@ -484,9 +533,9 @@ execAndWait document.querySelector("a[href='${ampUrl}'").click();`;
     document.querySelectorAll('.checkbox').forEach(check => {
       if (check.checked) {
         if (check.value === "serp")
-          promises.push(runScriptedWPT(testInfo[check.value].url, testInfo.origin.url, connection, check.value, wptApiKey));
+          promises.push(runScriptedWPT(testInfo[check.value].url, testInfo.origin.url, connection, location, check.value, wptApiKey));
         else
-          promises.push(runWPT(testInfo[check.value].url, connection, check.value, wptApiKey));
+          promises.push(runWPT(testInfo[check.value].url, connection, location, check.value, wptApiKey));
       }
     });
 
